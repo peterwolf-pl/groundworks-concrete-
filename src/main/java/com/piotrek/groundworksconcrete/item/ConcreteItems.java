@@ -1,6 +1,8 @@
 package com.piotrek.groundworksconcrete.item;
 
 import com.piotrek.groundworksconcrete.GroundworksConcreteMod;
+import com.piotrek.groundworksconcrete.block.ConcreteBlocks;
+import com.piotrek.groundworksconcrete.material.ConcreteGrade;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -40,8 +42,11 @@ public final class ConcreteItems {
                     output.accept(DRY_MIX_B10);
                     output.accept(DRY_MIX_B20);
                     output.accept(DRY_MIX_B30);
-                })
-                .build();
+                    output.accept(ConcreteBlocks.FORMWORK_ITEM);
+                    for (ConcreteGrade grade : ConcreteGrade.values()) {
+                        output.accept(ConcreteBlocks.solidItem(grade));
+                    }
+                }).build();
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
                 Identifier.fromNamespaceAndPath(GroundworksConcreteMod.MOD_ID, "main"), tab);
     }

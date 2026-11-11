@@ -3,5 +3,12 @@
   "item.pw_groundworks_concrete.cement_bag": "Cement Bag",
   "item.pw_groundworks_concrete.dry_mix_b10": "B10 Dry Concrete Mix",
   "item.pw_groundworks_concrete.dry_mix_b20": "B20 Dry Concrete Mix",
-  "item.pw_groundworks_concrete.dry_mix_b30": "B30 Dry Concrete Mix"
+  "item.pw_groundworks_concrete.dry_mix_b30": "B30 Dry Concrete Mix",
+  "block.pw_groundworks_concrete.wet_concrete_b10": "Fresh Concrete B10",
+  "block.pw_groundworks_concrete.wet_concrete_b20": "Fresh Concrete B20",
+  "block.pw_groundworks_concrete.wet_concrete_b30": "Fresh Concrete B30",
+  "block.pw_groundworks_concrete.hardened_concrete_b10": "Hardened Concrete B10",
+  "block.pw_groundworks_concrete.hardened_concrete_b20": "Hardened Concrete B20",
+  "block.pw_groundworks_concrete.hardened_concrete_b30": "Hardened Concrete B30",
+  "block.pw_groundworks_concrete.concrete_formwork": "Concrete Formwork"
 }

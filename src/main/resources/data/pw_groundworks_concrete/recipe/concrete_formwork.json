@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "S S",
+    "PPP",
+    "S S"
+  ],
+  "key": {
+    "S": "minecraft:stick",
+    "P": "minecraft:oak_planks"
+  },
+  "result": {
+    "id": "pw_groundworks_concrete:concrete_formwork",
+    "count": 4
+  }
+}

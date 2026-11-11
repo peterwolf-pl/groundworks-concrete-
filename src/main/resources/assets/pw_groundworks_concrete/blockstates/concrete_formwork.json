@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "pw_groundworks_concrete:block/concrete_formwork"
+    }
+  }
+}

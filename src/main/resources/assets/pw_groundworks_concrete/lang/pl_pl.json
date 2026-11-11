@@ -3,5 +3,12 @@
   "item.pw_groundworks_concrete.cement_bag": "Worek cementu",
   "item.pw_groundworks_concrete.dry_mix_b10": "Sucha mieszanka betonowa B10",
   "item.pw_groundworks_concrete.dry_mix_b20": "Sucha mieszanka betonowa B20",
-  "item.pw_groundworks_concrete.dry_mix_b30": "Sucha mieszanka betonowa B30"
+  "item.pw_groundworks_concrete.dry_mix_b30": "Sucha mieszanka betonowa B30",
+  "block.pw_groundworks_concrete.wet_concrete_b10": "Świeży beton B10",
+  "block.pw_groundworks_concrete.wet_concrete_b20": "Świeży beton B20",
+  "block.pw_groundworks_concrete.wet_concrete_b30": "Świeży beton B30",
+  "block.pw_groundworks_concrete.hardened_concrete_b10": "Związany beton B10",
+  "block.pw_groundworks_concrete.hardened_concrete_b20": "Związany beton B20",
+  "block.pw_groundworks_concrete.hardened_concrete_b30": "Związany beton B30",
+  "block.pw_groundworks_concrete.concrete_formwork": "Szalunek betonowy"
 }
