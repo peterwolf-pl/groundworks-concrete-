@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "pw_groundworks_concrete",
+  "version": "${version}",
+  "name": "Peterwolf's Groundworks: Concrete",
+  "description": "Concrete batches, accurate ingredient accounting, and foundations for mixer trucks and pumps.",
+  "authors": ["Peterwolf"],
+  "license": "All Rights Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.piotrek.groundworksconcrete.GroundworksConcreteMod"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "pw_groundworks": ">=0.1.0"
+  }
+}
