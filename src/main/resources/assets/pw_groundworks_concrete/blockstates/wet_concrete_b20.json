@@ -1,0 +1,76 @@
+{
+  "variants": {
+    "level=1,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level1"
+    },
+    "level=1,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level1"
+    },
+    "level=1,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level1"
+    },
+    "level=2,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level2"
+    },
+    "level=2,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level2"
+    },
+    "level=2,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level2"
+    },
+    "level=3,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level3"
+    },
+    "level=3,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level3"
+    },
+    "level=3,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level3"
+    },
+    "level=4,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level4"
+    },
+    "level=4,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level4"
+    },
+    "level=4,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level4"
+    },
+    "level=5,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level5"
+    },
+    "level=5,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level5"
+    },
+    "level=5,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level5"
+    },
+    "level=6,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level6"
+    },
+    "level=6,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level6"
+    },
+    "level=6,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level6"
+    },
+    "level=7,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level7"
+    },
+    "level=7,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level7"
+    },
+    "level=7,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level7"
+    },
+    "level=8,tone=0": {
+      "model": "pw_groundworks_concrete:block/wet_tone0_level8"
+    },
+    "level=8,tone=1": {
+      "model": "pw_groundworks_concrete:block/wet_tone1_level8"
+    },
+    "level=8,tone=2": {
+      "model": "pw_groundworks_concrete:block/wet_tone2_level8"
+    }
+  }
+}

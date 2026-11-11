@@ -1,71 +1,86 @@
 # Peterwolf's Groundworks: Concrete
 
-**Stage 1: material recipes and exact batch accounting**
+Fabric addon for Minecraft **26.3**, Java **25** and Peterwolf's Groundworks.
 
-Minecraft **26.3**, Fabric Loader **0.19.5**, Fabric API **0.160.7+26.3**, Java **25**, and Peterwolf's Groundworks.
+## Stage 2 implemented
 
-## Stage 1 implemented
+- Three independently registered fresh-concrete blocks: **B10, B20, B30**.
+- Gravity-first, laterally spreading, lava-like finite-volume simulation.
+- No fire, ignition, lava contact effects or infinite concrete source blocks.
+- Exactly **512 microvoxel units = one nominal cubic metre**.
+- Each live cell retains grade, amount of water, cement, sand, gravel, and initial pour game tick.
+- Vertical downhill transfers up to 128 units per update; horizontal equalization has limited slope/viscosity.
+- Formwork blocks stop concrete and can be removed after curing.
+- Age-based shade progression at 8,000 and 16,000 ticks.
+- Flow stops at 20,000 ticks; concrete hardens at 24,000 elapsed world-game ticks.
+- Hardened concrete blocks have three grade-specific hardness values, with partial-height shapes at 1/8-block increments.
+- Server-side volume and ingredient accounting: split/recombine retains integer gram/millilitre quantities while fresh.
+- Per-dimension saved data using Codec to survive world saves and server restarts.
+- Bounded priority-queue scheduler with a 128-cell-per-tick limit; sleeping settled cells awaken at the next curing boundary.
+- Dedicated world pouring API for later mixer trucks and pump-hose delivery.
+- Read-only inspection, fluid pour, and recipe commands.
+- Model variants for 8 visual fluid levels and three shades, using vanilla concrete textures.
+- Pure Java tests for gravity, formwork barriers, exact ingredient conservation, and curing boundaries.
 
-- Independent Fabric mod with a creative inventory tab.
-- Cement-bag and B10/B20/B30 dry-mix items (temporary vanilla item graphics).
-- Read-only in-game recipe and batch-preview commands.
-- B10 (C8/10), B20 (C16/20), B30 (C25/30) nominal recipes.
-- Dry/fresh batch classes with adjustable water content and recipe-quality indicator.
-- Exact integer ingredient accounting in grams and millilitres.
-- Groundworks-compatible volumetric units: 512 units = 1 block = nominal 1 m³.
-- Immutable batch splits and capacity-restricted tanks without material duplication.
-- JUnit tests and GitHub Actions build.
+### Currently simplified
 
-## Nominal concrete recipes per 1 m³
+- The fluid is a custom finite-volume Minecraft block simulation, **not a native Fluid implementation**.
+- Cell volume is exact while fresh; hardened partial geometry is approximated to the nearest 1/8 block.
+- Wet concrete is non-solid and does not exert realistic pressure on entities.
+- Flow uses a simple deterministic viscosity/head heuristic, not computational fluid dynamics.
+- Different concrete grades cannot mix into the same cell.
+- Concrete hardening is a gameplay simplification (1 Minecraft day is not real concrete's 28-day strength timeline).
+- Formwork is a reusable oak-textured solid construction block.
+- The first graphical pass reuses vanilla textures; custom wet/glossy PBR materials are deferred.
+- Bucket inventories and actual cement/sand/gravel-to-batch crafting are still deferred.
 
-| Grade | Cement kg | Sand kg | Gravel kg | Water L | W/C |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| B10 (C8/10) | 200 | 750 | 1150 | 150 | 0.75 |
-| B20 (C16/20) | 290 | 650 | 1200 | 165 | 0.57 |
-| B30 (C25/30) | 390 | 560 | 1150 | 175 | 0.45 |
+## Recipes per nominal 1 m³
 
-These are approximate gameplay proportions, **not engineering mix specifications**.
-The B-grade mappings use cube strength. Quality and flowability scores are gameplay approximations.
+| Grade | Cement kg | Sand kg | Gravel kg | Water L |
+|---|---:|---:|---:|---:|
+| B10 (C8/10) | 200 | 750 | 1150 | 150 |
+| B20 (C16/20) | 290 | 650 | 1200 | 165 |
+| B30 (C25/30) | 390 | 560 | 1150 | 175 |
 
-## Commands
+Approximate gameplay recipes, not certified construction mix designs.
 
-- /groundworks concrete recipe b10
-- /groundworks concrete recipe b20
-- /groundworks concrete recipe b30
-- /groundworks concrete preview b10 512
-- /groundworks concrete preview b20 256
-- /groundworks concrete preview b30 1024
+## Commands (operator permission)
 
-The preview simulates ingredient amounts; it does not spawn concrete or fill trucks.
+    /groundworks concrete recipe b10
+    /groundworks concrete preview b20 512
+    /groundworks concrete pour b10 512
+    /groundworks concrete pour b20 1024 ~ ~ ~
+    /groundworks concrete pour b30 512 100 70 100
+    /groundworks concrete inspect
+    /groundworks concrete inspect 100 70 100
+    /groundworks concrete stats
+
+`pour` is an **administrator testing command**: it creates fresh concrete at the specified position
+without consuming items. A normal pumping machine will call `ConcreteWorldApi.pour` and
+deduct only accepted units from its own inventory. In-game `pour` without coordinates targets
+the air above the block the player is looking at, or the command source's current position.
+
+### Example foundation test
+
+1. Build a floor, surround a 3x3 foundation pit with a wall of `concrete_formwork` blocks.
+2. Stand above it and execute `/groundworks concrete pour b20 4096 <x> <y> <z>` at the empty interior.
+3. Watch concrete spread downward and sideways. Use `/groundworks concrete stats`.
+4. Let the world run for 24,000 game ticks (not real seconds).
+5. The shade gradually lightens and wet cells become mined hardened-concrete blocks.
 
 ## Build
 
-Use Java 25. Run:
+    ./gradlew clean test build
 
-    ./gradlew clean build
+Requires Java 25, Fabric Loader 0.19.5, Fabric API 0.160.7+26.3 and the compatible Groundworks mod.
 
-The mod JAR is generated in build/libs. Place it in mods alongside the matching Fabric API and Groundworks mod.
+## Stage 3 and subsequent work
 
-## Architecture / integration boundary
-
-The existing Groundworks 26.3 material registry currently contains fixed numeric
-IDs for dirt, sand, gravel and cobblestone. This module intentionally does not
-invent conflicting IDs or insert cement into private Groundworks storage.
-Sand and gravel will be mapped to existing Groundworks materials when the public
-registration/transfer API is extended.
-
-The in-game bag items are Stage 1 placeholders. They do not yet represent loose
-volumetric cement on the terrain, nor do they provide functional crafting.
-
-## Not included in Stage 1
-
-- Real flowing and curing concrete blocks (Stage 2).
-- Stationary mixing machine (Stage 3).
-- Animated mixer truck and discharge chute (Stages 4-5).
-- Pump truck, stabilizers, hydraulic articulated boom and remote control (Stages 6-7).
-- Actual transfer, pumping, lighting, sounds and Dump Truck integration (Stages 8-10).
+- Stage 3: working stationary concrete mixer and ingredients-to-batch crafting.
+- Stages 4-5: mixer truck, animated drum and discharge chute.
+- Stages 6-7: boom pump, outriggers, hydraulic joints and handheld remote.
+- Stages 8-10: material transfer, vehicle lighting, audio and Dump Truck cement integration.
 
 ## Licence
 
-Source is published without an open-source licence grant. The mod metadata marks
-it All Rights Reserved until the owner selects a licence.
+All Rights Reserved until the repository owner selects an explicit open-source or source-available licence.
