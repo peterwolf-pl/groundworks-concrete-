@@ -10,7 +10,7 @@ Fabric addon for Minecraft **26.3**, Java **25** and Peterwolf's Groundworks.
 - Exactly **512 microvoxel units = one nominal cubic metre**.
 - Each live cell retains grade, amount of water, cement, sand, gravel, and initial pour game tick.
 - Vertical downhill transfers up to 128 units per update; horizontal equalization has limited slope/viscosity.
-- Formwork blocks stop concrete and can be removed after curing.
+- Craftable formwork blocks stop concrete and drop their item when mined after curing.
 - Age-based shade progression at 8,000 and 16,000 ticks.
 - Flow stops at 20,000 ticks; concrete hardens at 24,000 elapsed world-game ticks.
 - Hardened concrete blocks have three grade-specific hardness values, with partial-height shapes at 1/8-block increments.
@@ -32,7 +32,7 @@ Fabric addon for Minecraft **26.3**, Java **25** and Peterwolf's Groundworks.
 - Concrete hardening is a gameplay simplification (1 Minecraft day is not real concrete's 28-day strength timeline).
 - Formwork is a reusable oak-textured solid construction block.
 - The first graphical pass reuses vanilla textures; custom wet/glossy PBR materials are deferred.
-- Bucket inventories and actual cement/sand/gravel-to-batch crafting are still deferred.
+- Formwork is craftable from sticks and oak planks. Bucket inventories and actual cement/sand/gravel-to-batch crafting are still deferred.
 
 ## Recipes per nominal 1 m³
 

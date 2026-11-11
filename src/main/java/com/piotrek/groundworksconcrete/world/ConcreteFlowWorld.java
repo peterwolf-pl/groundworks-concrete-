@@ -192,6 +192,8 @@ public final class ConcreteFlowWorld extends SavedData {
             if (level.getBlockState(pos).getBlock() instanceof WetConcreteBlock) {
                 level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
             }
+            // When the source empties, wake concrete immediately above and beside it.
+            scheduleNeighborhood(pos, level.getGameTime() + FLOW_INTERVAL_TICKS);
         } else {
             cells.put(key, cell);
             setDirty();
@@ -217,7 +219,15 @@ public final class ConcreteFlowWorld extends SavedData {
     private boolean canReceive(ServerLevel level, BlockPos pos, ConcreteGrade grade) {
         if (!level.hasChunkAt(pos)) return false;
         BlockState state = level.getBlockState(pos);
-        if (state.isAir()) return !cells.containsKey(pos.asLong());
+        if (state.isAir()) {
+            // A player may remove wet concrete between scheduled simulation ticks.
+            // Remove stale metadata before accepting a new pour into this air cell.
+            if (cells.remove(pos.asLong()) != null) {
+                scheduledAt.remove(pos.asLong());
+                setDirty();
+            }
+            return true;
+        }
         if (state.getBlock() instanceof WetConcreteBlock wet && wet.grade() == grade) {
             ConcreteFlowCell existing = cells.get(pos.asLong());
             return existing != null && existing.batch().grade() == grade;
