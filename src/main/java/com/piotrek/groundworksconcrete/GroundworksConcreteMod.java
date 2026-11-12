@@ -8,6 +8,7 @@ import com.piotrek.groundworksconcrete.command.ConcretePumpCommands;
 import com.piotrek.groundworksconcrete.item.ConcreteItems;
 import com.piotrek.groundworksconcrete.network.MixerTruckInputPayload;
 import com.piotrek.groundworksconcrete.network.ConcretePumpInputPayload;
+import com.piotrek.groundworksconcrete.network.PumpRemoteControlPayload;
 import com.piotrek.groundworksconcrete.pump.ConcretePumpTruckEntity;
 import com.piotrek.groundworksconcrete.vehicle.ConcreteTruckRegistry;
 import com.piotrek.groundworksconcrete.vehicle.MixerTruckEntity;
@@ -62,12 +63,28 @@ public final class GroundworksConcreteMod implements ModInitializer {
                         }
                     }));
 
+        PayloadTypeRegistry.serverboundPlay().register(
+                PumpRemoteControlPayload.TYPE,PumpRemoteControlPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(
+                PumpRemoteControlPayload.TYPE,(payload,context) ->
+                    context.server().execute(() -> {
+                        var source=context.player();
+                        if(source.level().getEntity(payload.targetEntityId())
+                                instanceof ConcretePumpTruckEntity pump) {
+                            pump.acceptRemoteControls(source,payload.selectedJoint(),
+                                    payload.slewAxis(),payload.jointAxis(),
+                                    payload.togglePump(),payload.rateDelta(),
+                                    payload.emergencyStop(),payload.resetStop(),
+                                    payload.stow(),payload.toggleLegs(),payload.aimAtLook());
+                        }
+                    }));
+
         CommandRegistrationCallback.EVENT.register(ConcretePumpCommands::register);
         CommandRegistrationCallback.EVENT.register(ConcreteCommands::register);
         CommandRegistrationCallback.EVENT.register(MixerTruckCommands::register);
         ServerTickEvents.END_SERVER_TICK.register(server ->
                 server.getAllLevels().forEach(level -> ConcreteFlowWorld.get(level).tick(level)));
 
-        LOGGER.info("Groundworks Concrete Stage 6: mobile pump truck, four stabilizers and five-joint hydraulic boom");
+        LOGGER.info("Groundworks Concrete Stage 7: remote-controlled hydraulic pump and conserved concrete transfer");
     }
 }

@@ -25,7 +25,7 @@ public final class ConcretePumpHud implements HudElement {
         if(client.player==null ||
                 !(client.player.getVehicle() instanceof ConcretePumpTruckEntity pump))return;
 
-        int x=8,y=8,w=290,h=112;
+        int x=8,y=8,w=306,h=128;
         g.fill(x-4,y-4,x+w,y+h,0xB00F2024);
         g.outline(x-4,y-4,w+4,h+4,0xFF20D0D0);
         g.text(client.font,Component.literal("GROUNDWORKS / CONCRETE PUMP"),x,y,
@@ -50,7 +50,12 @@ public final class ConcretePumpHud implements HudElement {
                 x,y+69,0xFFC9DADE,true);
         g.text(client.font,Component.literal("ARROWS HYDRAULICS  WASD DRIVE"),
                 x,y+82,0xFFC9DADE,true);
-        g.text(client.font,Component.literal("L LIGHTS  C HORN  Remote: Stage 7"),
-                x,y+95,0xFFC9DADE,true);
+        g.text(client.font,Component.literal(String.format(Locale.ROOT,
+                "PUMP: %s  RATE: %d units/tick  FLOW: %s",
+                pump.emergencyStopped()?"E-STOP":pump.pumpEnabled()?"RUN":"OFF",
+                pump.pumpRate(),pump.activelyFlowing()?"YES":"NO")),
+                x,y+95,0xFFDDDDDD,true);
+        g.text(client.font,Component.literal("REMOTE: pair handheld controller for pumping"),
+                x,y+108,0xFFC9DADE,true);
     }
 }

@@ -11,6 +11,8 @@ import com.piotrek.groundworksconcrete.pump.PumpBoomRig;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -48,6 +50,22 @@ public final class ConcretePumpCommands {
                                         .executes(ctx->legs(ctx,false)))
                                 .then(Commands.literal("stow")
                                         .executes(ConcretePumpCommands::stow))
+                                .then(Commands.literal("start")
+                                        .executes(ctx->power(ctx,true)))
+                                .then(Commands.literal("stop")
+                                        .executes(ctx->power(ctx,false)))
+                                .then(Commands.literal("estop")
+                                        .executes(ConcretePumpCommands::estop))
+                                .then(Commands.literal("reset")
+                                        .executes(ConcretePumpCommands::reset))
+                                .then(Commands.literal("unpair")
+                                        .executes(ConcretePumpCommands::unpair))
+                                .then(Commands.literal("rate")
+                                        .then(Commands.argument("units",IntegerArgumentType.integer(1,32))
+                                                .executes(ConcretePumpCommands::rate)))
+                                .then(Commands.literal("target")
+                                        .then(Commands.argument("pos",BlockPosArgument.blockPos())
+                                                .executes(ConcretePumpCommands::target)))
                                 .then(Commands.literal("slew")
                                         .then(Commands.argument("degrees",DoubleArgumentType.doubleArg(
                                                 -PumpBoomRig.MAX_SLEW,PumpBoomRig.MAX_SLEW))
@@ -128,6 +146,72 @@ public final class ConcretePumpCommands {
         return 1;
     }
 
+    private static int power(CommandContext<CommandSourceStack> ctx,boolean enabled){
+        ConcretePumpTruckEntity pump=require(ctx.getSource());
+        if(pump==null)return 0;
+        if(!pump.requestPumping(enabled)){
+            ctx.getSource().sendFailure(Component.literal(
+                    "Cannot start pumping: verify legs, non-stowed boom, hopper and E-STOP"));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(()->Component.literal(
+                enabled?"Pump running":"Pump stopped"),true);
+        return 1;
+    }
+
+    private static int estop(CommandContext<CommandSourceStack> ctx){
+        ConcretePumpTruckEntity pump=require(ctx.getSource());
+        if(pump==null)return 0;
+        pump.emergencyStop();
+        ctx.getSource().sendSuccess(()->Component.literal("EMERGENCY STOP activated"),true);
+        return 1;
+    }
+
+    private static int reset(CommandContext<CommandSourceStack> ctx){
+        ConcretePumpTruckEntity pump=require(ctx.getSource());
+        if(pump==null)return 0;
+        if(!pump.resetEmergencyStop()){
+            ctx.getSource().sendFailure(Component.literal(
+                    "Cannot reset emergency stop until all outriggers are supported"));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(()->Component.literal("E-STOP released, pump remains off"),true);
+        return 1;
+    }
+
+    private static int unpair(CommandContext<CommandSourceStack> ctx){
+        ConcretePumpTruckEntity pump=require(ctx.getSource());
+        if(pump==null)return 0;
+        pump.clearRemotePairing();
+        ctx.getSource().sendSuccess(()->Component.literal("Pump remote pairing cleared"),true);
+        return 1;
+    }
+
+    private static int rate(CommandContext<CommandSourceStack> ctx){
+        ConcretePumpTruckEntity pump=require(ctx.getSource());
+        if(pump==null)return 0;
+        int value=IntegerArgumentType.getInteger(ctx,"units");
+        pump.setPumpRate(value);
+        ctx.getSource().sendSuccess(()->Component.literal(
+                "Pump flow rate "+value+" units per tick"),true);
+        return 1;
+    }
+
+    private static int target(CommandContext<CommandSourceStack> ctx){
+        ConcretePumpTruckEntity pump=require(ctx.getSource());
+        if(pump==null)return 0;
+        BlockPos pos=BlockPosArgument.getLoadedBlockPos(ctx,"pos");
+        if(!pump.requestAim(new PumpBoomRig.Point(pos.getX()+0.5,
+                pos.getY()+0.2,pos.getZ()+0.5))){
+            ctx.getSource().sendFailure(Component.literal(
+                    "Hose target unreachable or outriggers not locked"));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(()->Component.literal(
+                "Boom IK target selected, actuators moving to "+pos.toShortString()),true);
+        return 1;
+    }
+
     private static int fill(CommandContext<CommandSourceStack> ctx,ConcreteGrade grade,int units){
         ConcretePumpTruckEntity pump=require(ctx.getSource());
         if(pump==null)return 0;
@@ -148,12 +232,14 @@ public final class ConcretePumpCommands {
         if(p==null)return 0;
         var tip=p.boomPose().tip();
         String msg=String.format(Locale.ROOT,
-                "Pump: legs %s, support %s, boom %s, slew %.1f, tip %.2f %.2f %.2f, hopper %s %d/%d",
+                "Pump: legs %s, support %s, boom %s, slew %.1f, tip %.2f %.2f %.2f, hopper %s %d/%d, pumping %s, rate %d, E-STOP %s",
                 p.outriggersRequested()?"DEPLOYED/DEPLOYING":"RETRACTED",
                 p.isRigSupported()?"LOCKED":"NOT LOCKED",
                 p.boomStowed()?"STOWED":"ACTIVE",
                 p.slewAngle(),tip.x(),tip.y(),tip.z(),
-                p.hopperGrade(),p.hopperUnits(),p.hopperCapacity());
+                p.hopperGrade(),p.hopperUnits(),p.hopperCapacity(),
+                p.pumpEnabled()?"ON":"OFF",p.pumpRate(),
+                p.emergencyStopped()?"LATCHED":"CLEAR");
         ctx.getSource().sendSuccess(()->Component.literal(msg),false);
         return 1;
     }

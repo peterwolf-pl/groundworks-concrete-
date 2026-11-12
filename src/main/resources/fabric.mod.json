@@ -3,7 +3,7 @@
   "id": "pw_groundworks_concrete",
   "version": "${version}",
   "name": "Peterwolf's Groundworks: Concrete",
-  "description": "Groundworks Concrete: B10/B20/B30, stationary mixer, mixer truck and hydraulic five-section concrete pump truck.",
+  "description": "Groundworks Concrete B10/B20/B30, mixer vehicles, pump boom with wireless remote and finite-volume hose delivery.",
   "authors": [
     "Peterwolf"
   ],

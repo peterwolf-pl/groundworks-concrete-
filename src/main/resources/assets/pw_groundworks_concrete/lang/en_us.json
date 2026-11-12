@@ -32,5 +32,13 @@
   "key.pw_groundworks_concrete.pump_joint_up": "Raise selected boom joint",
   "key.pw_groundworks_concrete.pump_joint_down": "Lower selected boom joint",
   "key.pw_groundworks_concrete.pump_slew_left": "Rotate pump boom left",
-  "key.pw_groundworks_concrete.pump_slew_right": "Rotate pump boom right"
+  "key.pw_groundworks_concrete.pump_slew_right": "Rotate pump boom right",
+  "item.pw_groundworks_concrete.pump_remote": "Concrete Pump Wireless Remote",
+  "key.category.pw_groundworks_concrete.pump_remote": "Concrete Pump Remote",
+  "key.pw_groundworks_concrete.remote_pump_toggle": "Start/stop concrete pump",
+  "key.pw_groundworks_concrete.remote_rate_up": "Increase pumping rate",
+  "key.pw_groundworks_concrete.remote_rate_down": "Decrease pumping rate",
+  "key.pw_groundworks_concrete.remote_emergency": "Emergency STOP pump",
+  "key.pw_groundworks_concrete.remote_reset": "Reset emergency stop",
+  "key.pw_groundworks_concrete.remote_aim": "Aim hose at looked-at block"
 }

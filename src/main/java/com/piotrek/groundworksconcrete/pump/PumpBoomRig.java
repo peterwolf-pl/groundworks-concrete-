@@ -62,6 +62,11 @@ public final class PumpBoomRig {
         System.arraycopy(HOME,0,targets,0,SECTION_COUNT);
         targetSlew=0.0;
     }
+    /** Freeze actual hydraulic servo targets when emergency STOP is pressed. */
+    public void halt() {
+        System.arraycopy(angles,0,targets,0,SECTION_COUNT);
+        targetSlew=slew;
+    }
     public boolean isStowed() {
         if (Math.abs(slew)>1.0) return false;
         for(int i=0;i<SECTION_COUNT;i++) if(Math.abs(angles[i]-HOME[i])>1.0) return false;
@@ -122,6 +127,83 @@ public final class PumpBoomRig {
             previous=next;
         }
         return new Pose(List.copyOf(sections),previous);
+    }
+
+    /**
+     * Limited iterative inverse kinematics for positioning the hose over a
+     * looked-at foundation. Geometry is solved in the boom's vertical plane.
+     * It changes actuator TARGETS only. Actual hydraulic motion still passes
+     * per-tick world collision checks before any section is moved.
+     */
+    public boolean aimAt(Point destination,double x,double y,double z,double truckYaw) {
+        if(destination==null || !Double.isFinite(destination.x())
+                || !Double.isFinite(destination.y()) || !Double.isFinite(destination.z()))
+            return false;
+        Point base=pose(x,y,z,truckYaw).segments().get(0).start();
+        double dx=destination.x()-base.x();
+        double dz=destination.z()-base.z();
+        double up=destination.y()-base.y();
+        double radial=Math.hypot(dx,dz);
+        if(Math.hypot(radial,up)>MAX_REACH+1.0D)return false;
+
+        double yaw=Math.toRadians(truckYaw);
+        double forwardX=-Math.sin(yaw),forwardZ=Math.cos(yaw);
+        double rightX=forwardZ,rightZ=-forwardX;
+        double rear=-(dx*forwardX+dz*forwardZ);
+        double sideways=dx*rightX+dz*rightZ;
+        double solvedSlew=Math.clamp(Math.toDegrees(Math.atan2(sideways,rear)),
+                -MAX_SLEW,MAX_SLEW);
+
+        double[][] starting={
+                angles.clone(),
+                {35,-20,20,-20,5},
+                {50,-65,75,-55,20},
+                {10,30,-50,30,-10},
+                {65,-100,110,-80,45},
+                {0,0,0,0,0}
+        };
+        double[] best=null;
+        double bestScore=Double.POSITIVE_INFINITY;
+        for(double[] init:starting){
+            double[] trial=init.clone();
+            for(double step:new double[]{45,20,10,4,1.5,0.5,0.2}){
+                for(int pass=0;pass<40;pass++){
+                    boolean improved=false;
+                    for(int i=0;i<SECTION_COUNT;i++){
+                        double original=trial[i];
+                        double baseline=planeError(trial,radial,up);
+                        double winning=original;
+                        for(int direction:new int[]{-1,1}){
+                            trial[i]=Math.clamp(original+direction*step,MIN[i],MAX[i]);
+                            double error=planeError(trial,radial,up);
+                            if(error+1.0e-9<baseline){
+                                baseline=error;winning=trial[i];
+                            }
+                        }
+                        trial[i]=winning;
+                        if(Math.abs(original-winning)>1.0e-8)improved=true;
+                    }
+                    if(!improved)break;
+                }
+            }
+            double score=planeError(trial,radial,up);
+            if(score<bestScore){best=trial;bestScore=score;}
+        }
+        if(best==null || Math.sqrt(bestScore)>1.50D)return false;
+        targetSlew=solvedSlew;
+        System.arraycopy(best,0,targets,0,SECTION_COUNT);
+        return true;
+    }
+
+    private static double planeError(double[] joints,double radial,double up){
+        double elevation=0;
+        double actualRadial=0,actualUp=0;
+        for(int i=0;i<SECTION_COUNT;i++){
+            elevation+=Math.toRadians(joints[i]);
+            actualRadial+=SECTION_LENGTHS[i]*Math.cos(elevation);
+            actualUp+=SECTION_LENGTHS[i]*Math.sin(elevation);
+        }
+        return Math.pow(actualRadial-radial,2)+Math.pow(actualUp-up,2);
     }
 
     private static boolean collides(Pose pose,Predicate<Segment> blocked) {

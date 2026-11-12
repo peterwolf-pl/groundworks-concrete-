@@ -32,5 +32,13 @@
   "key.pw_groundworks_concrete.pump_joint_up": "Podnieś wybrany przegub",
   "key.pw_groundworks_concrete.pump_joint_down": "Opuść wybrany przegub",
   "key.pw_groundworks_concrete.pump_slew_left": "Obróć wysięgnik w lewo",
-  "key.pw_groundworks_concrete.pump_slew_right": "Obróć wysięgnik w prawo"
+  "key.pw_groundworks_concrete.pump_slew_right": "Obróć wysięgnik w prawo",
+  "item.pw_groundworks_concrete.pump_remote": "Bezprzewodowy pilot pompy do betonu",
+  "key.category.pw_groundworks_concrete.pump_remote": "Pilot pompy do betonu",
+  "key.pw_groundworks_concrete.remote_pump_toggle": "Włącz/wyłącz pompę",
+  "key.pw_groundworks_concrete.remote_rate_up": "Zwiększ wydajność pompowania",
+  "key.pw_groundworks_concrete.remote_rate_down": "Zmniejsz wydajność pompowania",
+  "key.pw_groundworks_concrete.remote_emergency": "Awaryjny STOP pompy",
+  "key.pw_groundworks_concrete.remote_reset": "Odblokuj awaryjny STOP",
+  "key.pw_groundworks_concrete.remote_aim": "Skieruj wąż na wskazany blok"
 }
