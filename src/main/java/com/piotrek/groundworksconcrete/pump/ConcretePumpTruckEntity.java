@@ -458,15 +458,21 @@ public final class ConcretePumpTruckEntity extends Entity {
                 || player.getOffhandItem().is(ConcreteItems.PUMP_REMOTE);
         boolean inRange=player.distanceToSqr(this)<=PumpRemoteSafety.MAX_RANGE_BLOCKS
                 *PumpRemoteSafety.MAX_RANGE_BLOCKS;
-        if(stop && remoteHeld && inRange)emergencyStop();
+        if(stop && remoteHeld && inRange) {
+            emergencyStop();
+            return;
+        }
         if(!PumpRemoteSafety.mayOperate(pairedOperator,player.getUUID(),remoteHeld,
                 player.level()==world,player.distanceToSqr(this)))return;
         if(!Float.isFinite(slew)||!Float.isFinite(pitch))return;
         lastRemoteContactTick=world.getGameTime();
         joint=Math.clamp(joint,0,PumpBoomRig.SECTION_COUNT-1);
         entityData.set(SELECTED_JOINT,joint);
-        if(reset)resetEmergencyStop();
-        if(stow)rig.stow();
+        if(reset) {
+            resetEmergencyStop();
+            return; // Reset never simultaneously restarts motors or actuators.
+        }
+        if(stow && !emergencyStopped)rig.stow();
         if(toggleLegs)requestOutriggers(!outriggers.deploymentRequested());
         if(rateDelta!=0)setPumpRate(flowRate+Math.clamp(rateDelta,-4,4));
         if(isRigSupported() && !emergencyStopped) {
