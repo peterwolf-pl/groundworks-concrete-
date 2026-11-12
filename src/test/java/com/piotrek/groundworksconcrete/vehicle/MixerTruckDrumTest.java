@@ -17,6 +17,24 @@ class MixerTruckDrumTest {
         assertTrue(drum.angleDegrees() > before);
     }
 
+    @Test void reverseChangesRotationSignAndModePersists() {
+        MixerTruckDrum drum = new MixerTruckDrum();
+        drum.restore(true, 8.0F, 120F, MixerTruckDrum.Direction.MIX);
+        float before = drum.angleDegrees();
+        drum.tick();
+        float afterMix = drum.angleDegrees();
+        assertTrue(afterMix > before);
+        drum.reverseDirection();
+        assertTrue(drum.isDischarging());
+        drum.tick();
+        assertEquals(before, drum.angleDegrees(), 0.001);
+        assertEquals(MixerTruckDrum.Direction.DISCHARGE, drum.direction());
+        drum.restore(true, 5.0F, 70F, MixerTruckDrum.Direction.DISCHARGE);
+        assertEquals(MixerTruckDrum.Direction.DISCHARGE, drum.direction());
+        drum.toggle();
+        assertFalse(drum.isDischarging());
+    }
+
     @Test void rpmLimitAndSaveRestore() {
         MixerTruckDrum drum = new MixerTruckDrum();
         drum.setRpm(9.5F);

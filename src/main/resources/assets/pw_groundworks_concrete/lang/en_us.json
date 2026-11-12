@@ -16,5 +16,10 @@
   "key.category.pw_groundworks_concrete.truck_controls": "Groundworks Concrete Truck",
   "key.pw_groundworks_concrete.drum": "Toggle mixer drum",
   "key.pw_groundworks_concrete.lights": "Toggle headlights / beacons",
-  "key.pw_groundworks_concrete.horn": "Truck horn"
+  "key.pw_groundworks_concrete.horn": "Truck horn",
+  "key.pw_groundworks_concrete.reverse": "Reverse drum direction",
+  "key.pw_groundworks_concrete.chute_left": "Swing chute left",
+  "key.pw_groundworks_concrete.chute_right": "Swing chute right",
+  "key.pw_groundworks_concrete.chute_up": "Raise concrete chute",
+  "key.pw_groundworks_concrete.chute_down": "Lower concrete chute"
 }

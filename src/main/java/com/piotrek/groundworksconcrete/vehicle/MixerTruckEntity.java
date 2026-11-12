@@ -1,6 +1,10 @@
 package com.piotrek.groundworksconcrete.vehicle;
 
 import com.piotrek.groundworksconcrete.GroundworksConcreteMod;
+import com.piotrek.groundworksconcrete.block.ConcreteBlocks;
+import com.piotrek.groundworksconcrete.world.ConcreteWorldApi;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import com.piotrek.groundworksconcrete.material.ConcreteBatch;
 import com.piotrek.groundworksconcrete.material.ConcreteBatchTank;
 import com.piotrek.groundworksconcrete.material.ConcreteGrade;
@@ -37,8 +41,7 @@ import java.util.Locale;
 
 /**
  * Four-axle concrete mixer truck. Authoritative on the server.
- * Stage 4: road movement, storage, drum mixing rotation, lights and horn.
- * Reverse discharge and articulated chute intentionally deferred to Stage 5.
+ * Stage 5: reverse drum rotation, adjustable discharge chute and finite-volume unloading.
  */
 public final class MixerTruckEntity extends Entity {
     public static final int CAPACITY_UNITS = 8 * ConcreteBatch.UNITS_PER_CUBIC_METRE;
@@ -55,6 +58,14 @@ public final class MixerTruckEntity extends Entity {
             SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> DRUM_ACTIVE =
             SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DRUM_REVERSED =
+            SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> UNLOADING =
+            SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> CHUTE_YAW =
+            SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> CHUTE_TILT =
+            SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> LIGHTS =
             SynchedEntityData.defineId(MixerTruckEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BRAKING =
@@ -66,10 +77,13 @@ public final class MixerTruckEntity extends Entity {
 
     private final MixerTruckDrive drive = new MixerTruckDrive();
     private final MixerTruckDrum drum = new MixerTruckDrum();
+    private final MixerTruckChute chute = new MixerTruckChute();
     private final ConcreteBatchTank tank = new ConcreteBatchTank(CAPACITY_UNITS);
 
     private float throttle;
     private float steer;
+    private float chuteYawInput;
+    private float chuteTiltInput;
     private int freshInputTicks;
     private long lastHornTick = Long.MIN_VALUE / 2L;
     private long lastSwitchTick = Long.MIN_VALUE / 2L;
@@ -89,6 +103,10 @@ public final class MixerTruckEntity extends Entity {
         builder.define(DRUM_ANGLE,0F);
         builder.define(DRUM_RPM,MixerTruckDrum.DEFAULT_RPM);
         builder.define(DRUM_ACTIVE,true);
+        builder.define(DRUM_REVERSED,false);
+        builder.define(UNLOADING,false);
+        builder.define(CHUTE_YAW,0.0F);
+        builder.define(CHUTE_TILT,25.0F);
         builder.define(LIGHTS,false);
         builder.define(BRAKING,false);
         builder.define(CARGO_UNITS,0);
@@ -97,18 +115,24 @@ public final class MixerTruckEntity extends Entity {
 
     /** Called by the verified network handler; never trust client cargo values. */
     public void acceptControls(ServerPlayer player, float throttle, float steer,
-                               boolean toggleDrum, boolean toggleLights, boolean horn) {
+                               boolean toggleDrum, boolean toggleLights, boolean horn,
+                               boolean reverseDrum, float chuteYaw, float chuteTilt) {
         if (level().isClientSide() || !isDriver(player)) return;
-        if (!Float.isFinite(throttle) || !Float.isFinite(steer)) return;
+        if (!Float.isFinite(throttle) || !Float.isFinite(steer)
+                || !Float.isFinite(chuteYaw) || !Float.isFinite(chuteTilt)) return;
         this.throttle = Mth.clamp(throttle,-1F,1F);
         this.steer = Mth.clamp(steer,-1F,1F);
+        this.chuteYawInput = Mth.clamp(chuteYaw,-1F,1F);
+        this.chuteTiltInput = Mth.clamp(chuteTilt,-1F,1F);
         this.freshInputTicks = 5;
         long now = level().getGameTime();
-        if ((toggleDrum || toggleLights) && now - lastSwitchTick >= 3) {
+        if ((toggleDrum || toggleLights || reverseDrum) && now - lastSwitchTick >= 3) {
             if (toggleDrum) drum.toggle();
+            if (reverseDrum) drum.reverseDirection();
             if (toggleLights) entityData.set(LIGHTS,!entityData.get(LIGHTS));
             lastSwitchTick = now;
             entityData.set(DRUM_ACTIVE,drum.rotating());
+            entityData.set(DRUM_REVERSED,drum.direction() == MixerTruckDrum.Direction.DISCHARGE);
         }
         if (horn && now - lastHornTick >= 15) {
             lastHornTick = now;
@@ -120,7 +144,7 @@ public final class MixerTruckEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
-        if (!(level() instanceof ServerLevel)) return;
+        if (!(level() instanceof ServerLevel serverLevel)) return;
 
         Entity riding = getControllingPassenger();
         if (riding instanceof ServerPlayer player) {
@@ -129,10 +153,14 @@ public final class MixerTruckEntity extends Entity {
                 var input = player.getLastClientInput();
                 throttle = input.forward() ? 1F : input.backward() ? -1F : 0F;
                 steer = input.left() ? -1F : input.right() ? 1F : 0F;
+                chuteYawInput = 0F;
+                chuteTiltInput = 0F;
             }
         } else {
             throttle = 0F;
             steer = 0F;
+            chuteYawInput = 0F;
+            chuteTiltInput = 0F;
             freshInputTicks = 0;
         }
 
@@ -153,6 +181,38 @@ public final class MixerTruckEntity extends Entity {
         setDeltaMovement(Vec3.ZERO);
 
         drum.tick();
+        chute.step(chuteYawInput,chuteTiltInput);
+        entityData.set(CHUTE_YAW,chute.yawDegrees());
+        entityData.set(CHUTE_TILT,chute.tiltDegrees());
+
+        boolean unloading = false;
+        if (drum.isDischarging()
+                && Math.abs(step.speed()) <= MixerTruckDischarge.MAX_PARKED_SPEED
+                && tank.storedUnits() > 0) {
+            MixerTruckChute.Point tip = getChuteOutlet();
+            BlockPos target = BlockPos.containing(tip.x(),tip.y(),tip.z());
+            // Do not force-load chunks or convert obstructed world blocks.
+            if (serverLevel.hasChunkAt(target)) {
+                ConcreteGrade grade = tank.snapshot().grade();
+                int accepted = MixerTruckDischarge.transfer(
+                        tank,drum,step.speed(),
+                        offered -> ConcreteWorldApi.pour(serverLevel,target,offered).acceptedUnits());
+                if (accepted > 0) {
+                    unloading = true;
+                    syncCargo();
+                    if (tickCount % 8 == 0) {
+                        serverLevel.sendParticles(new BlockParticleOption(
+                                        ParticleTypes.BLOCK,ConcreteBlocks.wet(grade).defaultBlockState()),
+                                tip.x(),tip.y(),tip.z(),6,0.13,0.13,0.13,0.06);
+                    }
+                    if (tickCount % 30 == 0) {
+                        serverLevel.playSound(null,getX(),getY(),getZ(),
+                                SoundEvents.BUCKET_EMPTY,SoundSource.BLOCKS,0.45F,0.65F);
+                    }
+                }
+            }
+        }
+        entityData.set(UNLOADING,unloading);
         entityData.set(SPEED,step.speed());
         entityData.set(STEER,step.steerDegrees());
         entityData.set(WHEELS,step.wheelDegrees());
@@ -182,11 +242,40 @@ public final class MixerTruckEntity extends Entity {
         entityData.set(CARGO_GRADE,batch == null ? -1 : batch.grade().ordinal());
     }
 
-    /** Admin-controlled speed (Stage 5 will add cab RPM key controls). */
+    /** Adjust RPM on the server. */
     public void setDrumRpm(float rpm) {
         if (!(level() instanceof ServerLevel)) return;
         drum.setRpm(rpm);
         entityData.set(DRUM_RPM, drum.rpm());
+    }
+
+    public boolean reverseMode() {
+        return entityData.get(DRUM_REVERSED);
+    }
+
+    public boolean activelyUnloading() {
+        return entityData.get(UNLOADING);
+    }
+
+    public float getChuteYaw() { return entityData.get(CHUTE_YAW); }
+    public float getChuteTilt() { return entityData.get(CHUTE_TILT); }
+
+    /** Used by admin commands; the player uses arrow-key controls. */
+    public void setChuteAngles(float yaw, float tilt) {
+        if (!(level() instanceof ServerLevel)) return;
+        chute.setAngles(yaw,tilt);
+        entityData.set(CHUTE_YAW,chute.yawDegrees());
+        entityData.set(CHUTE_TILT,chute.tiltDegrees());
+    }
+
+    public void setDrumDirection(MixerTruckDrum.Direction direction) {
+        if (!(level() instanceof ServerLevel)) return;
+        drum.setDirection(direction);
+        entityData.set(DRUM_REVERSED,direction == MixerTruckDrum.Direction.DISCHARGE);
+    }
+
+    public MixerTruckChute.Point getChuteOutlet() {
+        return chute.outlet(getX(),getY(),getZ(),getYRot());
     }
 
     public ConcreteBatch cargoSnapshot() { return tank.snapshot(); }
@@ -294,8 +383,18 @@ public final class MixerTruckEntity extends Entity {
         float rpm = input.getFloatOr("Rpm",MixerTruckDrum.DEFAULT_RPM);
         if (!Float.isFinite(rpm) || rpm < 0F || rpm > MixerTruckDrum.MAX_RPM)
             rpm = MixerTruckDrum.DEFAULT_RPM;
-        drum.restore(rotating,rpm,input.getFloatOr("DrumAngle",0F));
+        MixerTruckDrum.Direction direction = input.getBooleanOr("ReverseDrum",false)
+                ? MixerTruckDrum.Direction.DISCHARGE : MixerTruckDrum.Direction.MIX;
+        drum.restore(rotating,rpm,input.getFloatOr("DrumAngle",0F),direction);
+        float loadedYaw = input.getFloatOr("ChuteYaw",0F);
+        float loadedTilt = input.getFloatOr("ChuteTilt",25F);
+        if (Float.isFinite(loadedYaw) && Float.isFinite(loadedTilt))
+            chute.setAngles(loadedYaw,loadedTilt);
         entityData.set(LIGHTS,input.getBooleanOr("Lights",false));
+        entityData.set(CHUTE_YAW,chute.yawDegrees());
+        entityData.set(CHUTE_TILT,chute.tiltDegrees());
+        entityData.set(DRUM_REVERSED,direction == MixerTruckDrum.Direction.DISCHARGE);
+        entityData.set(UNLOADING,false);
 
         if (input.getBooleanOr("HasCargo",false)) {
             try {
@@ -330,6 +429,9 @@ public final class MixerTruckEntity extends Entity {
         output.putFloat("DrumAngle",drum.angleDegrees());
         output.putFloat("Rpm",drum.rpm());
         output.putBoolean("Rotating",drum.rotating());
+        output.putBoolean("ReverseDrum",drum.direction() == MixerTruckDrum.Direction.DISCHARGE);
+        output.putFloat("ChuteYaw",chute.yawDegrees());
+        output.putFloat("ChuteTilt",chute.tiltDegrees());
         output.putBoolean("Lights",lightsOn());
         ConcreteBatch batch = tank.snapshot();
         output.putBoolean("HasCargo",batch != null);

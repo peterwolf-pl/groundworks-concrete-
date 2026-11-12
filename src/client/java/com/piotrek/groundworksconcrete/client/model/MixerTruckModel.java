@@ -16,7 +16,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
  */
 public final class MixerTruckModel extends EntityModel<MixerTruckRenderState> {
     private final ModelPart chassis, cab, windows, grille, wheels, drumMount;
-    private final ModelPart drumShell, drumBands, drumMetal, rearChute;
+    private final ModelPart drumShell, drumBands, drumMetal, rearChute, chuteChannel;
     private final ModelPart headlamps, tailLamps, beacon;
     private final ModelPart[] steerers = new ModelPart[4];
     private final ModelPart[] tires = new ModelPart[8];
@@ -28,6 +28,7 @@ public final class MixerTruckModel extends EntityModel<MixerTruckRenderState> {
         windows=root.getChild("windows");
         grille=root.getChild("grille");
         rearChute=root.getChild("chute");
+        chuteChannel=rearChute.getChild("channel");
         headlamps=root.getChild("headlights");
         tailLamps=root.getChild("taillights");
         beacon=root.getChild("beacons");
@@ -70,6 +71,9 @@ public final class MixerTruckModel extends EntityModel<MixerTruckRenderState> {
         drumShell.zRot=drum;
         drumBands.zRot=drum;
         drumMetal.zRot=drum;
+        // Separate yaw turntable and downward hydraulic tilt for actual outlet aiming.
+        rearChute.yRot=(float)Math.toRadians(-state.chuteYawDegrees);
+        chuteChannel.xRot=(float)Math.toRadians(state.chuteTiltDegrees);
         beacon.visible=state.beaconFlash;
     }
 
@@ -116,13 +120,18 @@ public final class MixerTruckModel extends EntityModel<MixerTruckRenderState> {
                 .texOffs(0,0).addBox(-12F,13F,42F,6F,4F,4F)
                 .texOffs(0,0).addBox(6F,13F,42F,6F,4F,4F),PartPose.ZERO);
 
-        part(root,"chute",CubeListBuilder.create()
-                .texOffs(0,0).addBox(-12F,-9F,-69F,24F,3F,12F)
-                .texOffs(0,0).addBox(-11F,-6F,-75F,22F,2F,20F)
-                .texOffs(0,0).addBox(-15F,-30F,-61F,3F,24F,3F)
-                .texOffs(0,0).addBox(-14F,-32F,-61F,26F,2F,3F)
-                .texOffs(0,0).addBox(11F,-29F,-61F,2F,24F,3F)
-                .texOffs(0,0).addBox(-11F,-24F,-64F,22F,4F,3F),PartPose.ZERO);
+        // Rear collector, pivot mount and independently tilting open U-channel.
+        // Coordinates are relative to the truck; 16 model pixels = one block.
+        PartDefinition chute = root.addOrReplaceChild("chute",CubeListBuilder.create()
+                .texOffs(0,0).addBox(-11F,-16F,-2F,22F,5F,7F)
+                .texOffs(0,0).addBox(-9F,-12F,-2F,18F,10F,4F),
+                PartPose.offset(0F,-9F,-63F));
+        chute.addOrReplaceChild("channel",CubeListBuilder.create()
+                .texOffs(0,0).addBox(-8F,-1F,-36F,16F,3F,36F)
+                .texOffs(0,0).addBox(-9F,-7F,-36F,2F,7F,36F)
+                .texOffs(0,0).addBox(7F,-7F,-36F,2F,7F,36F)
+                .texOffs(0,0).addBox(-10F,-3F,-3F,20F,5F,6F),
+                PartPose.ZERO);
 
         // Real moving model part, tilted in X and independently rolled about Z.
         PartDefinition mount=root.addOrReplaceChild("drum_mount",

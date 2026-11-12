@@ -7,6 +7,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.piotrek.groundworksconcrete.material.ConcreteBatch;
 import com.piotrek.groundworksconcrete.material.ConcreteGrade;
 import com.piotrek.groundworksconcrete.vehicle.MixerTruckEntity;
+import com.piotrek.groundworksconcrete.vehicle.MixerTruckDrum;
+import com.piotrek.groundworksconcrete.vehicle.MixerTruckChute;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -33,11 +35,31 @@ public final class MixerTruckCommands {
                             .executes(ctx->fill(ctx,grade,
                                     IntegerArgumentType.getInteger(ctx,"units")))));
         }
+        var direction=Commands.literal("direction")
+                .then(Commands.literal("mix")
+                        .executes(ctx->setDirection(ctx,MixerTruckDrum.Direction.MIX)))
+                .then(Commands.literal("discharge")
+                        .executes(ctx->setDirection(ctx,MixerTruckDrum.Direction.DISCHARGE)));
+        var chute=Commands.literal("chute")
+                .then(Commands.literal("yaw")
+                        .then(Commands.argument("degrees",
+                                FloatArgumentType.floatArg(MixerTruckChute.MIN_YAW,
+                                        MixerTruckChute.MAX_YAW))
+                                .executes(ctx->setChute(ctx,true,
+                                        FloatArgumentType.getFloat(ctx,"degrees")))))
+                .then(Commands.literal("tilt")
+                        .then(Commands.argument("degrees",
+                                FloatArgumentType.floatArg(MixerTruckChute.MIN_TILT,
+                                        MixerTruckChute.MAX_TILT))
+                                .executes(ctx->setChute(ctx,false,
+                                        FloatArgumentType.getFloat(ctx,"degrees")))));
         dispatcher.register(Commands.literal("groundworks")
                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("concrete")
                         .then(Commands.literal("truck")
                                 .then(fill)
+                                .then(direction)
+                                .then(chute)
                                 .then(Commands.literal("inspect")
                                         .executes(MixerTruckCommands::inspect))
                                 .then(Commands.literal("rpm")
@@ -82,11 +104,42 @@ public final class MixerTruckCommands {
             return 0;
         }
         String message=String.format(Locale.ROOT,
-                "Mixer truck %s: %d/%d units (%.2f m3), drum %.1f RPM %s, headlights %s",
+                "Mixer truck %s: %d/%d units (%.2f m3), drum %.1f RPM %s, flow %s, chute yaw %+.1f tilt %.1f, lights %s",
                 truck.displayedGrade(),truck.storedUnits(),MixerTruckEntity.CAPACITY_UNITS,
                 truck.storedUnits()/512D,truck.getDrumRpm(),
-                truck.drumSpinning()?"mixing":"off",truck.lightsOn()?"on":"off");
+                !truck.drumSpinning()?"STOP":truck.reverseMode()?"DISCHARGE":"MIX",
+                truck.activelyUnloading()?"ON":"OFF",truck.getChuteYaw(),
+                truck.getChuteTilt(),truck.lightsOn()?"on":"off");
         ctx.getSource().sendSuccess(()->Component.literal(message),false);
+        return 1;
+    }
+
+    private static int setDirection(CommandContext<CommandSourceStack> ctx,
+                                    MixerTruckDrum.Direction direction){
+        MixerTruckEntity truck=nearest(ctx.getSource());
+        if(truck==null){
+            ctx.getSource().sendFailure(Component.literal("No mixer truck nearby"));
+            return 0;
+        }
+        truck.setDrumDirection(direction);
+        ctx.getSource().sendSuccess(()->Component.literal("Drum direction: "
+                +direction.name()+" (drum must be rotating and truck parked to unload)"),true);
+        return 1;
+    }
+
+    private static int setChute(CommandContext<CommandSourceStack> ctx,
+                                boolean yawAxis,float value){
+        MixerTruckEntity truck=nearest(ctx.getSource());
+        if(truck==null){
+            ctx.getSource().sendFailure(Component.literal("No mixer truck nearby"));
+            return 0;
+        }
+        if(yawAxis)truck.setChuteAngles(value,truck.getChuteTilt());
+        else truck.setChuteAngles(truck.getChuteYaw(),value);
+        var tip=truck.getChuteOutlet();
+        ctx.getSource().sendSuccess(()->Component.literal(String.format(Locale.ROOT,
+                "Chute yaw %+.1f tilt %.1f, outlet %.2f %.2f %.2f",
+                truck.getChuteYaw(),truck.getChuteTilt(),tip.x(),tip.y(),tip.z())),true);
         return 1;
     }
 
