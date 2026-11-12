@@ -3,7 +3,7 @@
   "id": "pw_groundworks_concrete",
   "version": "${version}",
   "name": "Peterwolf's Groundworks: Concrete",
-  "description": "Concrete material system, stationary mixer and drivable four-axle mixer truck for Groundworks.",
+  "description": "Groundworks Concrete: B10/B20/B30, stationary mixer, mixer truck and hydraulic five-section concrete pump truck.",
   "authors": [
     "Peterwolf"
   ],

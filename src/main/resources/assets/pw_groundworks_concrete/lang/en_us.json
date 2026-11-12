@@ -21,5 +21,16 @@
   "key.pw_groundworks_concrete.chute_left": "Swing chute left",
   "key.pw_groundworks_concrete.chute_right": "Swing chute right",
   "key.pw_groundworks_concrete.chute_up": "Raise concrete chute",
-  "key.pw_groundworks_concrete.chute_down": "Lower concrete chute"
+  "key.pw_groundworks_concrete.chute_down": "Lower concrete chute",
+  "item.pw_groundworks_concrete.concrete_pump_truck": "Concrete Pump Truck (44 m Boom)",
+  "key.category.pw_groundworks_concrete.pump_controls": "Concrete Pump Truck Controls",
+  "key.pw_groundworks_concrete.pump_legs": "Deploy/retract pump outriggers",
+  "key.pw_groundworks_concrete.pump_next_joint": "Select next hydraulic boom joint",
+  "key.pw_groundworks_concrete.pump_stow": "Fold boom to transport configuration",
+  "key.pw_groundworks_concrete.pump_lights": "Toggle pump truck lights",
+  "key.pw_groundworks_concrete.pump_horn": "Pump truck horn",
+  "key.pw_groundworks_concrete.pump_joint_up": "Raise selected boom joint",
+  "key.pw_groundworks_concrete.pump_joint_down": "Lower selected boom joint",
+  "key.pw_groundworks_concrete.pump_slew_left": "Rotate pump boom left",
+  "key.pw_groundworks_concrete.pump_slew_right": "Rotate pump boom right"
 }

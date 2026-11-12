@@ -1,6 +1,11 @@
 package com.piotrek.groundworksconcrete.client;
 
 import com.piotrek.groundworksconcrete.GroundworksConcreteMod;
+import com.piotrek.groundworksconcrete.client.pump.ConcretePumpTruckModel;
+import com.piotrek.groundworksconcrete.client.pump.ConcretePumpRenderer;
+import com.piotrek.groundworksconcrete.client.pump.ConcretePumpKeys;
+import com.piotrek.groundworksconcrete.client.pump.ConcretePumpInputHandler;
+import com.piotrek.groundworksconcrete.client.pump.ConcretePumpHud;
 import com.piotrek.groundworksconcrete.client.input.MixerTruckInputHandler;
 import com.piotrek.groundworksconcrete.client.input.MixerTruckKeys;
 import com.piotrek.groundworksconcrete.client.model.MixerTruckModel;
@@ -18,6 +23,9 @@ public final class GroundworksConcreteClient implements ClientModInitializer {
     public static final ModelLayerLocation MIXER_TRUCK_LAYER=new ModelLayerLocation(
             Identifier.fromNamespaceAndPath(GroundworksConcreteMod.MOD_ID,"mixer_truck"),"main");
 
+    public static final ModelLayerLocation PUMP_TRUCK_LAYER=new ModelLayerLocation(
+            Identifier.fromNamespaceAndPath(GroundworksConcreteMod.MOD_ID,"concrete_pump_truck"),"main");
+
     @Override
     public void onInitializeClient(){
         ModelLayerRegistry.registerModelLayer(MIXER_TRUCK_LAYER,MixerTruckModel::createBodyLayer);
@@ -25,5 +33,10 @@ public final class GroundworksConcreteClient implements ClientModInitializer {
         MixerTruckKeys.register();
         ClientTickEvents.END_CLIENT_TICK.register(MixerTruckInputHandler::tick);
         MixerTruckHud.register();
+        ModelLayerRegistry.registerModelLayer(PUMP_TRUCK_LAYER,ConcretePumpTruckModel::createBodyLayer);
+        EntityRendererRegistry.register(ConcreteTruckRegistry.PUMP_TRUCK,ConcretePumpRenderer::new);
+        ConcretePumpKeys.register();
+        ClientTickEvents.END_CLIENT_TICK.register(ConcretePumpInputHandler::tick);
+        ConcretePumpHud.register();
     }
 }
