@@ -21,5 +21,16 @@
   "key.pw_groundworks_concrete.chute_left": "Obróć zsyp w lewo",
   "key.pw_groundworks_concrete.chute_right": "Obróć zsyp w prawo",
   "key.pw_groundworks_concrete.chute_up": "Podnieś zsyp",
-  "key.pw_groundworks_concrete.chute_down": "Opuść zsyp"
+  "key.pw_groundworks_concrete.chute_down": "Opuść zsyp",
+  "item.pw_groundworks_concrete.concrete_pump_truck": "Pompa do betonu (wysięgnik 44 m)",
+  "key.category.pw_groundworks_concrete.pump_controls": "Sterowanie pompą do betonu",
+  "key.pw_groundworks_concrete.pump_legs": "Wysuń/schowaj podpory",
+  "key.pw_groundworks_concrete.pump_next_joint": "Wybierz następny przegub wysięgnika",
+  "key.pw_groundworks_concrete.pump_stow": "Złóż wysięgnik do transportu",
+  "key.pw_groundworks_concrete.pump_lights": "Światła pompy do betonu",
+  "key.pw_groundworks_concrete.pump_horn": "Klakson pompy do betonu",
+  "key.pw_groundworks_concrete.pump_joint_up": "Podnieś wybrany przegub",
+  "key.pw_groundworks_concrete.pump_joint_down": "Opuść wybrany przegub",
+  "key.pw_groundworks_concrete.pump_slew_left": "Obróć wysięgnik w lewo",
+  "key.pw_groundworks_concrete.pump_slew_right": "Obróć wysięgnik w prawo"
 }

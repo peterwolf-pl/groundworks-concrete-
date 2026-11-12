@@ -4,8 +4,11 @@ import com.piotrek.groundworksconcrete.block.ConcreteBlocks;
 import com.piotrek.groundworksconcrete.block.ConcreteBlockEntities;
 import com.piotrek.groundworksconcrete.command.ConcreteCommands;
 import com.piotrek.groundworksconcrete.command.MixerTruckCommands;
+import com.piotrek.groundworksconcrete.command.ConcretePumpCommands;
 import com.piotrek.groundworksconcrete.item.ConcreteItems;
 import com.piotrek.groundworksconcrete.network.MixerTruckInputPayload;
+import com.piotrek.groundworksconcrete.network.ConcretePumpInputPayload;
+import com.piotrek.groundworksconcrete.pump.ConcretePumpTruckEntity;
 import com.piotrek.groundworksconcrete.vehicle.ConcreteTruckRegistry;
 import com.piotrek.groundworksconcrete.vehicle.MixerTruckEntity;
 import com.piotrek.groundworksconcrete.world.ConcreteFlowWorld;
@@ -45,11 +48,26 @@ public final class GroundworksConcreteMod implements ModInitializer {
                         }
                     }));
 
+        PayloadTypeRegistry.serverboundPlay().register(
+                ConcretePumpInputPayload.TYPE,ConcretePumpInputPayload.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(
+                ConcretePumpInputPayload.TYPE,(payload,context) ->
+                    context.server().execute(() -> {
+                        if(context.player().getVehicle() instanceof ConcretePumpTruckEntity pump) {
+                            pump.acceptControls(context.player(),
+                                    payload.throttle(),payload.steer(),
+                                    payload.slewAxis(),payload.jointAxis(),
+                                    payload.selectedJoint(),payload.toggleLegs(),
+                                    payload.toggleLights(),payload.horn(),payload.stow());
+                        }
+                    }));
+
+        CommandRegistrationCallback.EVENT.register(ConcretePumpCommands::register);
         CommandRegistrationCallback.EVENT.register(ConcreteCommands::register);
         CommandRegistrationCallback.EVENT.register(MixerTruckCommands::register);
         ServerTickEvents.END_SERVER_TICK.register(server ->
                 server.getAllLevels().forEach(level -> ConcreteFlowWorld.get(level).tick(level)));
 
-        LOGGER.info("Groundworks Concrete Stage 5: truck, reversible drum, chute and concrete unloading");
+        LOGGER.info("Groundworks Concrete Stage 6: mobile pump truck, four stabilizers and five-joint hydraulic boom");
     }
 }

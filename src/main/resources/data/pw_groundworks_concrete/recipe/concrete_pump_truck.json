@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "PPP",
+    "ICI",
+    "IHI"
+  ],
+  "key": {
+    "P": "minecraft:piston",
+    "I": "minecraft:iron_block",
+    "C": "minecraft:cauldron",
+    "H": "minecraft:hopper"
+  },
+  "result": {
+    "id": "pw_groundworks_concrete:concrete_pump_truck",
+    "count": 1
+  }
+}

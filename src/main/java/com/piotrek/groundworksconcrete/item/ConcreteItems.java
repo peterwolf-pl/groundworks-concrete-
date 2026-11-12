@@ -46,6 +46,7 @@ public final class ConcreteItems {
                     output.accept(ConcreteBlocks.FORMWORK_ITEM);
                     output.accept(ConcreteBlocks.MIXER_ITEM);
                     output.accept(ConcreteTruckRegistry.MIXER_TRUCK_ITEM);
+                    output.accept(ConcreteTruckRegistry.PUMP_TRUCK_ITEM);
                     for (ConcreteGrade grade : ConcreteGrade.values()) {
                         output.accept(ConcreteBlocks.solidItem(grade));
                     }
