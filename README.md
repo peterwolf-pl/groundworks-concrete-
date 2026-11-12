@@ -1,96 +1,105 @@
 # Peterwolf's Groundworks: Concrete
 
-Fabric 26.3 / Java 25 / Groundworks addon.
+Fabric addon for Minecraft **26.3**, Java **25**, with Peterwolf's Groundworks.
 
-## Stage 3: stationary concrete mixer
+## Stage 4: four-axle concrete mixer truck
 
-This release adds the first working production machine to the existing finite-volume fresh-concrete and curing engine.
+Stage 4 adds a vehicle to Stage 1 recipes, Stage 2 wet concrete physics,
+and Stage 3 stationary mixing machinery.
 
-### In-game operation
+### Implemented
 
-1. Craft and place **Stationary Concrete Mixer** (iron, hopper, furnace).
-2. Right-click the mixer while holding ingredients to load its hopper.
-3. Sneak + right-click with an **empty hand** to cycle B10, B20, B30.
-4. Right-click with an empty hand to start mixing when enough ingredients are available.
-5. Wait **200 game ticks** (nominally 10 seconds at 20 TPS). The drum has a four-frame rotation animation.
-6. Right-click with an empty hand after mixing to discharge concrete into the block directly in front of the mixer, in the direction the outlet faces.
-7. The fluid flows down and sideways, fills enclosed formwork and hardens after **24,000 ticks**.
+- Placeable and driveable four-axle 8x4 concrete mixer truck with two front steering axles.
+- Detailed original Minecraft low-poly cabin, chassis, eight wheels, rear chute and twelve-facet drum.
+- Independently animated wheel steering, rolling and continuous rotating concrete drum.
+- Teal drum with orange bands, white cabin, dark windows, rear chute and warning beacons.
+- Custom-authored 16x16 game texture assets, including a truck inventory icon.
+- Server-authoritative WASD movement, interpolation on client and key-bound controls.
+- Headlights and rear lamps with emissive renderer, flashing amber beacons.
+- Horn using Minecraft's built-in note-block sound.
+- Eight cubic metres (4096 Groundworks units) of fresh-concrete storage.
+- B10/B20/B30 loads preserved with actual cement, sand, gravel and water masses.
+- Loading directly from stationary mixer when the truck is parked near its output.
+- Never subtract more mixture from the source than the truck accepts.
+- No mixing of different concrete grades in one load; full truck rejects additional material.
+- Vehicle persistence (cargo composition, drive state, drum speed/angle, lights).
+- No pickup or punch destruction while still carrying concrete.
+- HUD displaying volume, grade, drum RPM and controls.
+- Administration commands for loading, inspection and RPM adjustment.
+- Unit tests for drivetrain, drum, volume conservation, capacity and grade separation.
 
-The mixer retains unconsumed input amounts and cannot duplicate concrete if the outlet is blocked. It keeps produced concrete in its output buffer and removes only the amount accepted by the world.
+### Driver controls
 
-### Example B10 batch: one nominal cubic metre (512 units)
+| Key | Function |
+| --- | --- |
+| W/S | Accelerate / reverse |
+| A/D | Steer |
+| R | Start/stop drum in mixing direction |
+| L | Toggle headlights and amber beacons |
+| C | Horn |
+| Sneak + right-click (empty vehicle) | Pick up empty truck as an item |
 
-- 8 cement bags (25 kg each).
-- 1 vanilla sand block (loaded as 750 kg).
-- 1 vanilla gravel block (loaded as 1,150 kg).
-- 1 water bucket (1,000 L; 150 L consumed, 850 L remains for later batches).
+The drum defaults to **2 RPM** and is fully animated in the client renderer.
+The rotation is in the **mixing direction only** at this stage.
 
-B20 needs 290 kg cement, 650 kg sand, 1200 kg gravel, 165 L water; B30 needs 390 kg cement, 560 kg sand, 1150 kg gravel, 175 L water. Raw input containers accept exact measured mass, and leftover ingredients remain available for subsequent batches.
+### How to spawn and load a truck
 
-Additional gameplay input mappings:
+1. Locate the **Concrete Mixer Truck** item in the Groundworks Concrete creative tab.
+2. Place it on a clear, flat surface.
+3. Drive and park its rear hopper near the stationary concrete mixer's outlet.
+4. Produce a B10/B20/B30 batch in the mixer.
+5. Right-click the stationary mixer again to send its finished batch into the truck.
+6. Drive the loaded truck. The inventory and actual ingredient proportions survive saves.
 
-| Input item | Mixer storage added |
-|---|---:|
-| Cement bag | 25 kg cement |
-| Sand block | 750 kg sand |
-| Gravel block | 1,150 kg gravel |
-| Water bucket | 1,000 L water; empty bucket returned in Survival |
-| B10/B20/B30 dry mix item | 1/8 m3 of nominal dry ingredients, only when that grade is selected |
+For quick operator testing without a stationary mixer:
 
-The cement bag has a simple gameplay crafting recipe (calcite, clay, coal), not an industrial simulation of cement production. Sand and gravel currently enter as vanilla blocks rather than direct Groundworks granular-container transfers.
-
-### Working mechanics and persistence
-
-- One active batch per machine, maximum 512 microvoxel units.
-- Mixing time and materials are stored in the block entity and survive world reloads.
-- Server-side ingredient accounting in integer grams and millilitres.
-- The output uses the Stage 2 world-pouring API and respects blocked formwork/walls.
-- After a partial discharge, the machine retains the exact remainder.
-- Visual four-frame drum rotation encoded as block-state models.
-- Concrete grade selection, ingredient inventory and status communicated by in-game overlay text.
-- Reusable formwork and B10/B20/B30 concrete solidification from Stage 2.
-- JUnit tests for input accounting, each grade, persistence restoration, mixing and transfer boundaries.
-
-### Known limitations
-
-- The mixer is a single-block low-poly model, not yet a detailed multiblock machine.
-- Drum animation is four model frames, not a skeletal or physically rotating cylinder.
-- No mixer-machine inventory GUI yet; use item interactions and overlay messages.
-- The world pours at a block position in front of the machine; a hose attachment is deferred.
-- The raw ingredient inventory is not currently returned when a stocked machine is broken. Do not break loaded machines.
-- Input ratios approximate gameplay material accounting, not certified concrete design.
-- Tests are included but cannot be claimed passing until a Minecraft 26.3 / Java 25 Gradle build executes.
-- Stage 4 will implement the road mixer truck with a full rotating drum and chute.
-
-## Admin commands
-
+```mcfunction
+/groundworks concrete truck fill b10 512
+/groundworks concrete truck fill b20 4096
+/groundworks concrete truck inspect
+/groundworks concrete truck rpm 6
 ```
-/groundworks concrete recipe b10
+
+The command searches for the **nearest concrete mixer truck within 18 blocks**.
+The command respects tank capacity and refuses to blend different grades.
+Admin filling creates test material. Normal gameplay loads via the stationary mixer.
+
+### Still available from earlier stages
+
+```mcfunction
 /groundworks concrete recipe b20
-/groundworks concrete recipe b30
 /groundworks concrete preview b30 512
-/groundworks concrete pour b20 512 100 70 100
+/groundworks concrete pour b20 512
 /groundworks concrete inspect
 /groundworks concrete stats
 ```
 
-The administrator `pour` command creates test concrete without consuming items. A stationary mixer consumes its ingredients and delivers material through the world API.
+### Stage 4 boundaries
 
-## Build
+- **No reverse drum discharge yet.** Stage 5 introduces auger direction switching and articulated discharge chute.
+- The rear chute is modeled but not currently movable or a pouring source.
+- No concrete pump truck or hydraulic boom yet.
+- No engine audio loop; the horn uses a vanilla sound.
+- Headlights are emissive visual features, not true dynamic world lighting.
+- No multiplayer integration test has been executed; networking uses server-side authority and driver checks.
+- No validated build JAR has been produced because GitHub Actions has not run any build steps.
+- Truck body is intentionally low-poly; additional LOD / PBR and diesel audio polish follow later.
+
+## Building
+
+Use Java 25, Minecraft 26.3, Fabric Loader 0.19.5,
+Fabric API 0.160.7+26.3, and the matching Groundworks mod.
 
 ```bash
 ./gradlew clean test build
 ```
 
-Required: Java 25, Fabric 26.3, matching Fabric API and Peterwolf's Groundworks.
+## Next milestones
 
-## Upcoming development
-
-- Stage 4: concrete mixer truck (rotating drum, realistic vehicle model, road transport).
-- Stage 5: drum reversal, articulated chute, realistic concrete unloading.
-- Stage 6: heavy concrete pump truck, stabilizers and segmented hydraulic boom.
-- Stage 7: remote boom and pumping controls.
-- Stage 8+: Groundworks granular transfers, lighting, sound and vehicle polish.
+- Stage 5: reverse-rotation discharge, animated adjustable chute, concrete transfer to the world.
+- Stage 6: pump truck, hydraulic outriggers and five-section articulated boom.
+- Stage 7: remote boom control, hose targeting, pump rate and emergency stop.
+- Stage 8+: Groundworks Dump Truck cement/dry-mix support, audio, lighting and visual polish.
 
 ## Licence
 

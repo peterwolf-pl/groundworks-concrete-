@@ -24,8 +24,6 @@ public final class ConcreteBlocks {
     private static final Map<ConcreteGrade, Item> SOLID_ITEMS =
             new EnumMap<>(ConcreteGrade.class);
     public static Block FORMWORK;
-    public static ConcreteMixerBlock MIXER;
-    public static Item MIXER_ITEM;
     public static Item FORMWORK_ITEM;
 
     private ConcreteBlocks() {}
@@ -58,11 +56,6 @@ public final class ConcreteBlocks {
         FORMWORK = Registry.register(BuiltInRegistries.BLOCK, formKey,
                 new Block(BlockBehaviour.Properties.of().setId(formKey).strength(1.25F)));
         FORMWORK_ITEM = registerBlockItem("concrete_formwork", FORMWORK);
-        ResourceKey<Block> mixerKey = blockKey("stationary_concrete_mixer");
-        MIXER = Registry.register(BuiltInRegistries.BLOCK, mixerKey,
-                new ConcreteMixerBlock(BlockBehaviour.Properties.of()
-                        .setId(mixerKey).strength(3.5F).noOcclusion()));
-        MIXER_ITEM = registerBlockItem("stationary_concrete_mixer", MIXER);
     }
 
     private static ResourceKey<Block> blockKey(String path) {

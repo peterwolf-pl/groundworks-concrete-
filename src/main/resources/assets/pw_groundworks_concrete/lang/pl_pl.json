@@ -11,5 +11,10 @@
   "block.pw_groundworks_concrete.hardened_concrete_b20": "Związany beton B20",
   "block.pw_groundworks_concrete.hardened_concrete_b30": "Związany beton B30",
   "block.pw_groundworks_concrete.concrete_formwork": "Szalunek betonowy",
-  "block.pw_groundworks_concrete.stationary_concrete_mixer": "Betoniarka stacjonarna"
+  "block.pw_groundworks_concrete.stationary_concrete_mixer": "Betoniarka stacjonarna",
+  "item.pw_groundworks_concrete.mixer_truck": "Gruszka do betonu (8 m³)",
+  "key.category.pw_groundworks_concrete.truck_controls": "Groundworks Gruszka",
+  "key.pw_groundworks_concrete.drum": "Włącz / wyłącz gruszkę",
+  "key.pw_groundworks_concrete.lights": "Światła i koguty",
+  "key.pw_groundworks_concrete.horn": "Klakson"
 }
