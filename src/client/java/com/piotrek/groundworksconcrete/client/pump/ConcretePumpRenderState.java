@@ -9,6 +9,7 @@ public final class ConcretePumpRenderState extends EntityRenderState {
     public float boomSlew;
     public final float[] joints=new float[5];
     public final float[] legExtensions=new float[4];
+    public final float[] legDrops=new float[4];
     public boolean deployed,supported,lights,braking,beaconFlash;
     public int hopperUnits,selectedJoint;
 }

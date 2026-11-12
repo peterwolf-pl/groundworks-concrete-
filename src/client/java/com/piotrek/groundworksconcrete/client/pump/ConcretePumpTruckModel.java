@@ -87,7 +87,9 @@ public final class ConcretePumpTruckModel extends EntityModel<ConcretePumpRender
             // Animated telescoping outriggers move outwards; jack/pad lowers.
             float sign=i%2==0?-1F:1F;
             feet[i].x=sign*(16F+extension*58F);
-            feet[i].y=2F+extension*6F;
+            // Horizontal beam first, then a vertically adjustable jack.
+            // An uneven ground level of up to two full blocks is represented.
+            feet[i].y=2F+extension*(6F+16F*state.legDrops[i]);
             feet[i].visible=extension>0.02F;
         }
         beacon.visible=state.lights&&state.beaconFlash;

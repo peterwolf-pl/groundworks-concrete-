@@ -48,7 +48,10 @@ public final class ConcretePumpRenderer
         state.wheelRotation=entity.wheelAngle();
         state.boomSlew=entity.slewAngle();
         for(int i=0;i<5;i++)state.joints[i]=entity.jointAngle(i);
-        for(int i=0;i<4;i++)state.legExtensions[i]=entity.legExtension(i);
+        for(int i=0;i<4;i++){
+            state.legExtensions[i]=entity.legExtension(i);
+            state.legDrops[i]=entity.legDrop(i);
+        }
         state.deployed=entity.outriggersRequested();
         state.supported=entity.isRigSupported();
         state.lights=entity.lightsOn();

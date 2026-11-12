@@ -75,6 +75,14 @@ public final class ConcretePumpTruckEntity extends Entity {
             SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> LEG3 =
             SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> LEG_DROP0 =
+            SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> LEG_DROP1 =
+            SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> LEG_DROP2 =
+            SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> LEG_DROP3 =
+            SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> LEGS_REQUESTED =
             SynchedEntityData.defineId(ConcretePumpTruckEntity.class,EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> LOCKED =
@@ -115,6 +123,8 @@ public final class ConcretePumpTruckEntity extends Entity {
         b.define(JOINT0,-5F);b.define(JOINT1,170F);b.define(JOINT2,-170F);
         b.define(JOINT3,170F);b.define(JOINT4,-170F);
         b.define(LEG0,0F);b.define(LEG1,0F);b.define(LEG2,0F);b.define(LEG3,0F);
+        b.define(LEG_DROP0,0F);b.define(LEG_DROP1,0F);
+        b.define(LEG_DROP2,0F);b.define(LEG_DROP3,0F);
         b.define(LEGS_REQUESTED,false);b.define(LOCKED,false);
         b.define(LIGHTS,false);b.define(BRAKING,false);
         b.define(HOPPER_UNITS,0);b.define(HOPPER_GRADE,-1);b.define(SELECTED_JOINT,0);
@@ -181,6 +191,7 @@ public final class ConcretePumpTruckEntity extends Entity {
 
     private boolean[] padSupport(ServerLevel world) {
         boolean[] result=new boolean[PumpOutriggers.COUNT];
+        float[] groundDrop=new float[PumpOutriggers.COUNT];
         for(int i=0;i<PumpOutriggers.COUNT;i++) {
             PumpOutriggers.Foot foot=outriggers.foot(i,getX(),getY(),getZ(),getYRot());
             // A foot can accommodate up to two blocks of terrain elevation change.
@@ -191,10 +202,15 @@ public final class ConcretePumpTruckEntity extends Entity {
                 if(!world.hasChunkAt(candidate))break;
                 if(world.getBlockState(candidate).isFaceSturdy(world,candidate,Direction.UP)) {
                     result[i]=true;
+                    groundDrop[i]=depth;
                     break;
                 }
             }
         }
+        entityData.set(LEG_DROP0,groundDrop[0]);
+        entityData.set(LEG_DROP1,groundDrop[1]);
+        entityData.set(LEG_DROP2,groundDrop[2]);
+        entityData.set(LEG_DROP3,groundDrop[3]);
         return result;
     }
 
@@ -321,6 +337,13 @@ public final class ConcretePumpTruckEntity extends Entity {
         return switch(i){
             case 0->entityData.get(LEG0);case 1->entityData.get(LEG1);
             case 2->entityData.get(LEG2);case 3->entityData.get(LEG3);
+            default->throw new IllegalArgumentException("Outrigger 0..3");
+        };
+    }
+    public float legDrop(int i){
+        return switch(i){
+            case 0->entityData.get(LEG_DROP0);case 1->entityData.get(LEG_DROP1);
+            case 2->entityData.get(LEG_DROP2);case 3->entityData.get(LEG_DROP3);
             default->throw new IllegalArgumentException("Outrigger 0..3");
         };
     }
