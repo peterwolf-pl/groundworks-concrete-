@@ -10,5 +10,6 @@
   "block.pw_groundworks_concrete.hardened_concrete_b10": "Hardened Concrete B10",
   "block.pw_groundworks_concrete.hardened_concrete_b20": "Hardened Concrete B20",
   "block.pw_groundworks_concrete.hardened_concrete_b30": "Hardened Concrete B30",
-  "block.pw_groundworks_concrete.concrete_formwork": "Concrete Formwork"
+  "block.pw_groundworks_concrete.concrete_formwork": "Concrete Formwork",
+  "block.pw_groundworks_concrete.stationary_concrete_mixer": "Stationary Concrete Mixer"
 }

@@ -43,6 +43,7 @@ public final class ConcreteItems {
                     output.accept(DRY_MIX_B20);
                     output.accept(DRY_MIX_B30);
                     output.accept(ConcreteBlocks.FORMWORK_ITEM);
+                    output.accept(ConcreteBlocks.MIXER_ITEM);
                     for (ConcreteGrade grade : ConcreteGrade.values()) {
                         output.accept(ConcreteBlocks.solidItem(grade));
                     }

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "IHI",
+    "IFI",
+    "I I"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "H": "minecraft:hopper",
+    "F": "minecraft:furnace"
+  },
+  "result": {
+    "id": "pw_groundworks_concrete:stationary_concrete_mixer",
+    "count": 1
+  }
+}

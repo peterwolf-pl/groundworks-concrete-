@@ -1,86 +1,97 @@
 # Peterwolf's Groundworks: Concrete
 
-Fabric addon for Minecraft **26.3**, Java **25** and Peterwolf's Groundworks.
+Fabric 26.3 / Java 25 / Groundworks addon.
 
-## Stage 2 implemented
+## Stage 3: stationary concrete mixer
 
-- Three independently registered fresh-concrete blocks: **B10, B20, B30**.
-- Gravity-first, laterally spreading, lava-like finite-volume simulation.
-- No fire, ignition, lava contact effects or infinite concrete source blocks.
-- Exactly **512 microvoxel units = one nominal cubic metre**.
-- Each live cell retains grade, amount of water, cement, sand, gravel, and initial pour game tick.
-- Vertical downhill transfers up to 128 units per update; horizontal equalization has limited slope/viscosity.
-- Craftable formwork blocks stop concrete and drop their item when mined after curing.
-- Age-based shade progression at 8,000 and 16,000 ticks.
-- Flow stops at 20,000 ticks; concrete hardens at 24,000 elapsed world-game ticks.
-- Hardened concrete blocks have three grade-specific hardness values, with partial-height shapes at 1/8-block increments.
-- Server-side volume and ingredient accounting: split/recombine retains integer gram/millilitre quantities while fresh.
-- Per-dimension saved data using Codec to survive world saves and server restarts.
-- Bounded priority-queue scheduler with a 128-cell-per-tick limit; sleeping settled cells awaken at the next curing boundary.
-- Dedicated world pouring API for later mixer trucks and pump-hose delivery.
-- Read-only inspection, fluid pour, and recipe commands.
-- Model variants for 8 visual fluid levels and three shades, using vanilla concrete textures.
-- Pure Java tests for gravity, formwork barriers, exact ingredient conservation, and curing boundaries.
+This release adds the first working production machine to the existing finite-volume fresh-concrete and curing engine.
 
-### Currently simplified
+### In-game operation
 
-- The fluid is a custom finite-volume Minecraft block simulation, **not a native Fluid implementation**.
-- Cell volume is exact while fresh; hardened partial geometry is approximated to the nearest 1/8 block.
-- Wet concrete is non-solid and does not exert realistic pressure on entities.
-- Flow uses a simple deterministic viscosity/head heuristic, not computational fluid dynamics.
-- Different concrete grades cannot mix into the same cell.
-- Concrete hardening is a gameplay simplification (1 Minecraft day is not real concrete's 28-day strength timeline).
-- Formwork is a reusable oak-textured solid construction block.
-- The first graphical pass reuses vanilla textures; custom wet/glossy PBR materials are deferred.
-- Formwork is craftable from sticks and oak planks. Bucket inventories and actual cement/sand/gravel-to-batch crafting are still deferred.
+1. Craft and place **Stationary Concrete Mixer** (iron, hopper, furnace).
+2. Right-click the mixer while holding ingredients to load its hopper.
+3. Sneak + right-click with an **empty hand** to cycle B10, B20, B30.
+4. Right-click with an empty hand to start mixing when enough ingredients are available.
+5. Wait **200 game ticks** (nominally 10 seconds at 20 TPS). The drum has a four-frame rotation animation.
+6. Right-click with an empty hand after mixing to discharge concrete into the block directly in front of the mixer, in the direction the outlet faces.
+7. The fluid flows down and sideways, fills enclosed formwork and hardens after **24,000 ticks**.
 
-## Recipes per nominal 1 m³
+The mixer retains unconsumed input amounts and cannot duplicate concrete if the outlet is blocked. It keeps produced concrete in its output buffer and removes only the amount accepted by the world.
 
-| Grade | Cement kg | Sand kg | Gravel kg | Water L |
-|---|---:|---:|---:|---:|
-| B10 (C8/10) | 200 | 750 | 1150 | 150 |
-| B20 (C16/20) | 290 | 650 | 1200 | 165 |
-| B30 (C25/30) | 390 | 560 | 1150 | 175 |
+### Example B10 batch: one nominal cubic metre (512 units)
 
-Approximate gameplay recipes, not certified construction mix designs.
+- 8 cement bags (25 kg each).
+- 1 vanilla sand block (loaded as 750 kg).
+- 1 vanilla gravel block (loaded as 1,150 kg).
+- 1 water bucket (1,000 L; 150 L consumed, 850 L remains for later batches).
 
-## Commands (operator permission)
+B20 needs 290 kg cement, 650 kg sand, 1200 kg gravel, 165 L water; B30 needs 390 kg cement, 560 kg sand, 1150 kg gravel, 175 L water. Raw input containers accept exact measured mass, and leftover ingredients remain available for subsequent batches.
 
-    /groundworks concrete recipe b10
-    /groundworks concrete preview b20 512
-    /groundworks concrete pour b10 512
-    /groundworks concrete pour b20 1024 ~ ~ ~
-    /groundworks concrete pour b30 512 100 70 100
-    /groundworks concrete inspect
-    /groundworks concrete inspect 100 70 100
-    /groundworks concrete stats
+Additional gameplay input mappings:
 
-`pour` is an **administrator testing command**: it creates fresh concrete at the specified position
-without consuming items. A normal pumping machine will call `ConcreteWorldApi.pour` and
-deduct only accepted units from its own inventory. In-game `pour` without coordinates targets
-the air above the block the player is looking at, or the command source's current position.
+| Input item | Mixer storage added |
+|---|---:|
+| Cement bag | 25 kg cement |
+| Sand block | 750 kg sand |
+| Gravel block | 1,150 kg gravel |
+| Water bucket | 1,000 L water; empty bucket returned in Survival |
+| B10/B20/B30 dry mix item | 1/8 m3 of nominal dry ingredients, only when that grade is selected |
 
-### Example foundation test
+The cement bag has a simple gameplay crafting recipe (calcite, clay, coal), not an industrial simulation of cement production. Sand and gravel currently enter as vanilla blocks rather than direct Groundworks granular-container transfers.
 
-1. Build a floor, surround a 3x3 foundation pit with a wall of `concrete_formwork` blocks.
-2. Stand above it and execute `/groundworks concrete pour b20 4096 <x> <y> <z>` at the empty interior.
-3. Watch concrete spread downward and sideways. Use `/groundworks concrete stats`.
-4. Let the world run for 24,000 game ticks (not real seconds).
-5. The shade gradually lightens and wet cells become mined hardened-concrete blocks.
+### Working mechanics and persistence
+
+- One active batch per machine, maximum 512 microvoxel units.
+- Mixing time and materials are stored in the block entity and survive world reloads.
+- Server-side ingredient accounting in integer grams and millilitres.
+- The output uses the Stage 2 world-pouring API and respects blocked formwork/walls.
+- After a partial discharge, the machine retains the exact remainder.
+- Visual four-frame drum rotation encoded as block-state models.
+- Concrete grade selection, ingredient inventory and status communicated by in-game overlay text.
+- Reusable formwork and B10/B20/B30 concrete solidification from Stage 2.
+- JUnit tests for input accounting, each grade, persistence restoration, mixing and transfer boundaries.
+
+### Known limitations
+
+- The mixer is a single-block low-poly model, not yet a detailed multiblock machine.
+- Drum animation is four model frames, not a skeletal or physically rotating cylinder.
+- No mixer-machine inventory GUI yet; use item interactions and overlay messages.
+- The world pours at a block position in front of the machine; a hose attachment is deferred.
+- The raw ingredient inventory is not currently returned when a stocked machine is broken. Do not break loaded machines.
+- Input ratios approximate gameplay material accounting, not certified concrete design.
+- Tests are included but cannot be claimed passing until a Minecraft 26.3 / Java 25 Gradle build executes.
+- Stage 4 will implement the road mixer truck with a full rotating drum and chute.
+
+## Admin commands
+
+```
+/groundworks concrete recipe b10
+/groundworks concrete recipe b20
+/groundworks concrete recipe b30
+/groundworks concrete preview b30 512
+/groundworks concrete pour b20 512 100 70 100
+/groundworks concrete inspect
+/groundworks concrete stats
+```
+
+The administrator `pour` command creates test concrete without consuming items. A stationary mixer consumes its ingredients and delivers material through the world API.
 
 ## Build
 
-    ./gradlew clean test build
+```bash
+./gradlew clean test build
+```
 
-Requires Java 25, Fabric Loader 0.19.5, Fabric API 0.160.7+26.3 and the compatible Groundworks mod.
+Required: Java 25, Fabric 26.3, matching Fabric API and Peterwolf's Groundworks.
 
-## Stage 3 and subsequent work
+## Upcoming development
 
-- Stage 3: working stationary concrete mixer and ingredients-to-batch crafting.
-- Stages 4-5: mixer truck, animated drum and discharge chute.
-- Stages 6-7: boom pump, outriggers, hydraulic joints and handheld remote.
-- Stages 8-10: material transfer, vehicle lighting, audio and Dump Truck cement integration.
+- Stage 4: concrete mixer truck (rotating drum, realistic vehicle model, road transport).
+- Stage 5: drum reversal, articulated chute, realistic concrete unloading.
+- Stage 6: heavy concrete pump truck, stabilizers and segmented hydraulic boom.
+- Stage 7: remote boom and pumping controls.
+- Stage 8+: Groundworks granular transfers, lighting, sound and vehicle polish.
 
 ## Licence
 
-All Rights Reserved until the repository owner selects an explicit open-source or source-available licence.
+All Rights Reserved until the project owner selects an explicit licence.
