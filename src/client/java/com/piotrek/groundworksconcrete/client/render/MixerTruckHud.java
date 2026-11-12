@@ -23,7 +23,7 @@ public final class MixerTruckHud implements HudElement {
     public void extractRenderState(GuiGraphicsExtractor g,DeltaTracker dt){
         Minecraft client=Minecraft.getInstance();
         if(client.player==null || !(client.player.getVehicle() instanceof MixerTruckEntity truck))return;
-        int x=9,y=9,w=237,h=66;
+        int x=9,y=9,w=284,h=85;
         g.fill(x-4,y-4,x+w,y+h,0xA0181D1F);
         g.outline(x-4,y-4,w+4,h+4,0xFFDF8B35);
         g.text(client.font,Component.literal("GROUNDWORKS / CONCRETE MIXER"),x,y,0xFFF6B86D,true);
@@ -34,10 +34,16 @@ public final class MixerTruckHud implements HudElement {
         g.fill(x,y+26,x+205,y+32,0xFF444A4E);
         g.fill(x,y+26,x+filled,y+32,0xFF2FBB9D);
         g.text(client.font,Component.literal(String.format(Locale.ROOT,
-                "DRUM: %s %.1f RPM     LIGHTS: %s",
-                truck.drumSpinning()?"MIX":"STOP",truck.getDrumRpm(),
+                "DRUM: %s %.1f RPM   %s    LIGHTS: %s",
+                truck.drumSpinning()?(truck.reverseMode()?"REVERSE":"MIX"):"STOP",
+                truck.getDrumRpm(),truck.activelyUnloading()?"FLOWING":"READY",
                 truck.lightsOn()?"ON":"OFF")),x,y+37,0xFFEEEEEE,true);
-        g.text(client.font,Component.literal("WASD DRIVE   R DRUM   L LIGHTS   C HORN"),
-                x,y+50,0xFFC9D4D8,true);
+        g.text(client.font,Component.literal(String.format(Locale.ROOT,
+                "CHUTE: yaw %+.0f deg | down %.0f deg",
+                truck.getChuteYaw(),truck.getChuteTilt())),x,y+49,0xFFBEEAD8,true);
+        g.text(client.font,Component.literal("WASD DRIVE  R START/STOP  X REVERSE  ARROWS CHUTE"),
+                x,y+61,0xFFC9D4D8,true);
+        g.text(client.font,Component.literal("L LIGHTS   C HORN   Park to discharge"),
+                x,y+73,0xFFC9D4D8,true);
     }
 }

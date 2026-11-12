@@ -41,8 +41,13 @@ public final class MixerTruckRenderer extends EntityRenderer<MixerTruckEntity, M
         state.steerAngle=entity.getSteerAngle();
         state.wheelRotation=entity.getWheelRotation();
         state.drumActive=entity.drumSpinning();
+        state.drumReverse=entity.reverseMode();
+        state.unloading=entity.activelyUnloading();
+        state.chuteYawDegrees=entity.getChuteYaw();
+        state.chuteTiltDegrees=entity.getChuteTilt();
+        float signedSpeed=entity.reverseMode() ? -entity.getDrumRpm() : entity.getDrumRpm();
         state.drumAngle=entity.getDrumAngle()
-                +(entity.drumSpinning()?partialTick*entity.getDrumRpm()*360F/1200F:0F);
+                +(entity.drumSpinning()?partialTick*signedSpeed*360F/1200F:0F);
         state.cargoUnits=entity.displayedUnits();
         state.lightsOn=entity.lightsOn();
         state.braking=entity.braking();

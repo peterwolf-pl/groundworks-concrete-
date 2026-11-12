@@ -1,106 +1,115 @@
 # Peterwolf's Groundworks: Concrete
 
-Fabric addon for Minecraft **26.3**, Java **25**, with Peterwolf's Groundworks.
+Minecraft **26.3**, Fabric **0.19.5**, Java **25**, Fabric API **0.160.7+26.3**,
+with the base Peterwolf's Groundworks mod.
 
-## Stage 4: four-axle concrete mixer truck
+## Stage 5: reversed mixer drum, movable chute and actual concrete discharge
 
-Stage 4 adds a vehicle to Stage 1 recipes, Stage 2 wet concrete physics,
-and Stage 3 stationary mixing machinery.
+This milestone adds functional pouring to the four-axle truck from Stage 4.
+Existing stages remain: B10/B20/B30 recipes and ingredient accounting,
+finite-volume fresh concrete/curing, stationary mixer and drivable mixer truck.
 
-### Implemented
+### What Stage 5 implements
 
-- Placeable and driveable four-axle 8x4 concrete mixer truck with two front steering axles.
-- Detailed original Minecraft low-poly cabin, chassis, eight wheels, rear chute and twelve-facet drum.
-- Independently animated wheel steering, rolling and continuous rotating concrete drum.
-- Teal drum with orange bands, white cabin, dark windows, rear chute and warning beacons.
-- Custom-authored 16x16 game texture assets, including a truck inventory icon.
-- Server-authoritative WASD movement, interpolation on client and key-bound controls.
-- Headlights and rear lamps with emissive renderer, flashing amber beacons.
-- Horn using Minecraft's built-in note-block sound.
-- Eight cubic metres (4096 Groundworks units) of fresh-concrete storage.
-- B10/B20/B30 loads preserved with actual cement, sand, gravel and water masses.
-- Loading directly from stationary mixer when the truck is parked near its output.
-- Never subtract more mixture from the source than the truck accepts.
-- No mixing of different concrete grades in one load; full truck rejects additional material.
-- Vehicle persistence (cargo composition, drive state, drum speed/angle, lights).
-- No pickup or punch destruction while still carrying concrete.
-- HUD displaying volume, grade, drum RPM and controls.
-- Administration commands for loading, inspection and RPM adjustment.
-- Unit tests for drivetrain, drum, volume conservation, capacity and grade separation.
+- Change mixer drum direction from MIX to DISCHARGE.
+- Drum rotation reverses visually and physically represents the discharge auger.
+- Reverse rotation, an enabled drum, non-zero RPM and an essentially parked vehicle
+  are all required before the truck starts releasing concrete.
+- Rear U-channel chute has two independently controlled joints:
+  - Horizontal swing **-65° to +65°**.
+  - Downward tilt **10° to 55°**.
+- Chute outlet location follows the truck's yaw and both chute joint angles.
+- Fresh concrete exits at the **actual computed chute tip** through
+  the existing `ConcreteWorldApi.pour` operation from Stage 2.
+- World collisions, enclosure walls and formwork block discharge into occupied cells.
+- Exactly the number of accepted finite-volume units is deducted from the drum tank.
+- If the chute tip is blocked, or the destination chunk is unloaded, **no cargo is lost**.
+- The truck does not silently create concrete or blend incompatible strength grades.
+- Discharge rate scales with RPM: **2 units per tick per RPM**, up to 24 units per tick.
+  At 2 RPM, a full 4096-unit load takes about 1024 ticks (~51 seconds at 20 TPS)
+  if the discharge outlet remains unobstructed.
+- Server-authoritative multiplayer controls, displayed in the driver's HUD.
+- Visual block particles and intermittent pouring audio while material actually exits.
+- New state synchronized and saved: reverse direction, chute yaw/tilt and drum angle.
+- Includes tests for reversible drum movement, aim geometry, containment limits,
+  blocked destination conservation, partial acceptance and emptying a full tank.
+- Fixes Stage 4's missing truck entity/network registration in the mod initializer.
 
 ### Driver controls
 
-| Key | Function |
+| Key | Action |
 | --- | --- |
-| W/S | Accelerate / reverse |
-| A/D | Steer |
-| R | Start/stop drum in mixing direction |
-| L | Toggle headlights and amber beacons |
+| W / S | Drive forward / reverse |
+| A / D | Steering |
+| R | Start / stop mixer drum |
+| X | Reverse drum direction: mix / discharge |
+| Left / Right arrows | Swing chute left / right |
+| Up / Down arrows | Raise / lower chute tip |
+| L | Headlights and amber beacon |
 | C | Horn |
-| Sneak + right-click (empty vehicle) | Pick up empty truck as an item |
 
-The drum defaults to **2 RPM** and is fully animated in the client renderer.
-The rotation is in the **mixing direction only** at this stage.
+All special keys are remappable in Minecraft Controls.
 
-### How to spawn and load a truck
+### Example: concrete in formwork
 
-1. Locate the **Concrete Mixer Truck** item in the Groundworks Concrete creative tab.
-2. Place it on a clear, flat surface.
-3. Drive and park its rear hopper near the stationary concrete mixer's outlet.
-4. Produce a B10/B20/B30 batch in the mixer.
-5. Right-click the stationary mixer again to send its finished batch into the truck.
-6. Drive the loaded truck. The inventory and actual ingredient proportions survive saves.
+1. Place a mixer truck and build an enclosed, open-top formwork foundation.
+2. Load the truck from the Stage 3 stationary mixer, or with an operator command.
+3. Park near the foundation and aim the rear chute over its empty interior.
+4. Press **R** if the drum is stopped; press **X** to select reverse/discharge.
+5. Adjust the aim with the arrow keys. The HUD reports mode, current angles and
+   whether concrete actually flows.
+6. Concrete falls, spreads and fills the formwork with the Stage 2 simulation.
+7. After **24,000 elapsed game ticks**, it becomes hardened B10/B20/B30 concrete.
 
-For quick operator testing without a stationary mixer:
+The truck stops pouring if it starts moving too fast, the tank becomes empty,
+the drum stops, the operator selects mixing direction, or the outlet cannot accept concrete.
+
+### Operator/debug commands
 
 ```mcfunction
-/groundworks concrete truck fill b10 512
 /groundworks concrete truck fill b20 4096
 /groundworks concrete truck inspect
-/groundworks concrete truck rpm 6
+/groundworks concrete truck rpm 8
+/groundworks concrete truck direction discharge
+/groundworks concrete truck direction mix
+/groundworks concrete truck chute yaw -30
+/groundworks concrete truck chute tilt 45
 ```
 
-The command searches for the **nearest concrete mixer truck within 18 blocks**.
-The command respects tank capacity and refuses to blend different grades.
-Admin filling creates test material. Normal gameplay loads via the stationary mixer.
+The commands target the nearest mixer truck within 18 blocks.
+The admin fill command creates test concrete without consuming raw materials.
+Normal gameplay loading uses the Stage 3 stationary mixer.
 
-### Still available from earlier stages
+### Technical boundaries
 
-```mcfunction
-/groundworks concrete recipe b20
-/groundworks concrete preview b30 512
-/groundworks concrete pour b20 512
-/groundworks concrete inspect
-/groundworks concrete stats
-```
+- The Stage 5 chute is two-axis articulated; it is not yet telescoping or folding
+  into multiple nested extensions.
+- The discharge rate is a simplified gameplay approximation, not pump/auger CFD.
+- The concrete behaves as Stage 2's finite-volume flowing blocks, not vanilla lava.
+- The current vehicle renderer uses its low-poly drum mesh and existing texture palette.
+- This is the mixer **truck**, not the dedicated boom pump. The multi-jointed pump
+  and remote controls are the following milestones.
+- Headlights remain visually emissive without dynamic light casting.
+- Minecraft/Fabric compilation and in-game regression tests require a working runner.
+  A successful JAR is not claimed until those checks pass.
 
-### Stage 4 boundaries
+## Build
 
-- **No reverse drum discharge yet.** Stage 5 introduces auger direction switching and articulated discharge chute.
-- The rear chute is modeled but not currently movable or a pouring source.
-- No concrete pump truck or hydraulic boom yet.
-- No engine audio loop; the horn uses a vanilla sound.
-- Headlights are emissive visual features, not true dynamic world lighting.
-- No multiplayer integration test has been executed; networking uses server-side authority and driver checks.
-- No validated build JAR has been produced because GitHub Actions has not run any build steps.
-- Truck body is intentionally low-poly; additional LOD / PBR and diesel audio polish follow later.
-
-## Building
-
-Use Java 25, Minecraft 26.3, Fabric Loader 0.19.5,
-Fabric API 0.160.7+26.3, and the matching Groundworks mod.
+Run on Java 25:
 
 ```bash
 ./gradlew clean test build
 ```
 
-## Next milestones
+Install the produced, successfully verified JAR alongside the matching Fabric API
+and Peterwolf's Groundworks version.
 
-- Stage 5: reverse-rotation discharge, animated adjustable chute, concrete transfer to the world.
-- Stage 6: pump truck, hydraulic outriggers and five-section articulated boom.
-- Stage 7: remote boom control, hose targeting, pump rate and emergency stop.
-- Stage 8+: Groundworks Dump Truck cement/dry-mix support, audio, lighting and visual polish.
+## Upcoming
 
-## Licence
+- Stage 6: large truck-mounted concrete pump with stabilizers and a five-joint boom.
+- Stage 7: hydraulic remote control, pump rates, hose position and emergency stop.
+- Stage 8+: Dump Truck integration for cement/dry mix and audiovisual polish.
 
-All Rights Reserved until the project owner selects an explicit licence.
+## License
+
+All Rights Reserved until a specific project license is selected.

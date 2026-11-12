@@ -9,6 +9,10 @@ public final class MixerTruckRenderState extends EntityRenderState {
     public float wheelRotation;
     public float drumAngle;
     public boolean drumActive;
+    public boolean drumReverse;
+    public boolean unloading;
+    public float chuteYawDegrees;
+    public float chuteTiltDegrees;
     public boolean lightsOn;
     public boolean braking;
     public boolean beaconFlash;
