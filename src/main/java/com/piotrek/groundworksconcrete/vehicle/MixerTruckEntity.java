@@ -1,6 +1,9 @@
 package com.piotrek.groundworksconcrete.vehicle;
 
 import com.piotrek.groundworksconcrete.GroundworksConcreteMod;
+import com.piotrek.groundworksconcrete.pump.ConcretePumpTruckEntity;
+import net.minecraft.world.phys.AABB;
+import java.util.Comparator;
 import com.piotrek.groundworksconcrete.block.ConcreteBlocks;
 import com.piotrek.groundworksconcrete.world.ConcreteWorldApi;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -191,12 +194,26 @@ public final class MixerTruckEntity extends Entity {
                 && tank.storedUnits() > 0) {
             MixerTruckChute.Point tip = getChuteOutlet();
             BlockPos target = BlockPos.containing(tip.x(),tip.y(),tip.z());
+            Vec3 dischargePoint=new Vec3(tip.x(),tip.y(),tip.z());
+            // A pump intake aligned with the chute takes priority over the
+            // ground. A full or grade-incompatible hopper refuses transfer
+            // without spilling concrete into the world underneath the truck.
+            ConcretePumpTruckEntity receiver=serverLevel.getEntitiesOfClass(
+                    ConcretePumpTruckEntity.class,
+                    new AABB(dischargePoint,dischargePoint).inflate(5.0D),
+                    pump -> pump.canReceiveFromMixer(dischargePoint))
+                    .stream()
+                    .min(Comparator.comparingDouble(pump ->
+                            pump.intakePoint().distanceToSqr(dischargePoint)))
+                    .orElse(null);
+
             // Do not force-load chunks or convert obstructed world blocks.
-            if (serverLevel.hasChunkAt(target)) {
+            if(receiver!=null || serverLevel.hasChunkAt(target)) {
                 ConcreteGrade grade = tank.snapshot().grade();
                 int accepted = MixerTruckDischarge.transfer(
                         tank,drum,step.speed(),
-                        offered -> ConcreteWorldApi.pour(serverLevel,target,offered).acceptedUnits());
+                        offered -> receiver!=null ? receiver.receiveConcrete(offered)
+                                :ConcreteWorldApi.pour(serverLevel,target,offered).acceptedUnits());
                 if (accepted > 0) {
                     unloading = true;
                     syncCargo();

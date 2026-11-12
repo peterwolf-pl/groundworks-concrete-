@@ -19,6 +19,7 @@ public final class ConcreteItems {
     public static Item DRY_MIX_B10;
     public static Item DRY_MIX_B20;
     public static Item DRY_MIX_B30;
+    public static Item PUMP_REMOTE;
 
     private ConcreteItems() {}
 
@@ -34,6 +35,10 @@ public final class ConcreteItems {
         DRY_MIX_B10 = registerItem("dry_mix_b10");
         DRY_MIX_B20 = registerItem("dry_mix_b20");
         DRY_MIX_B30 = registerItem("dry_mix_b30");
+        Identifier remoteId=Identifier.fromNamespaceAndPath(GroundworksConcreteMod.MOD_ID,"pump_remote");
+        ResourceKey<Item> remoteKey=ResourceKey.create(Registries.ITEM,remoteId);
+        PUMP_REMOTE=Registry.register(BuiltInRegistries.ITEM,remoteKey,
+                new PumpRemoteItem(new Item.Properties().setId(remoteKey).stacksTo(1)));
 
         CreativeModeTab tab = FabricCreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.pw_groundworks_concrete.main"))
@@ -47,6 +52,7 @@ public final class ConcreteItems {
                     output.accept(ConcreteBlocks.MIXER_ITEM);
                     output.accept(ConcreteTruckRegistry.MIXER_TRUCK_ITEM);
                     output.accept(ConcreteTruckRegistry.PUMP_TRUCK_ITEM);
+                    output.accept(PUMP_REMOTE);
                     for (ConcreteGrade grade : ConcreteGrade.values()) {
                         output.accept(ConcreteBlocks.solidItem(grade));
                     }

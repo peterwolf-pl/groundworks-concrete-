@@ -6,6 +6,9 @@ import com.piotrek.groundworksconcrete.client.pump.ConcretePumpRenderer;
 import com.piotrek.groundworksconcrete.client.pump.ConcretePumpKeys;
 import com.piotrek.groundworksconcrete.client.pump.ConcretePumpInputHandler;
 import com.piotrek.groundworksconcrete.client.pump.ConcretePumpHud;
+import com.piotrek.groundworksconcrete.client.pump.PumpRemoteKeys;
+import com.piotrek.groundworksconcrete.client.pump.PumpRemoteInputHandler;
+import com.piotrek.groundworksconcrete.client.pump.PumpRemoteHud;
 import com.piotrek.groundworksconcrete.client.input.MixerTruckInputHandler;
 import com.piotrek.groundworksconcrete.client.input.MixerTruckKeys;
 import com.piotrek.groundworksconcrete.client.model.MixerTruckModel;
@@ -38,5 +41,8 @@ public final class GroundworksConcreteClient implements ClientModInitializer {
         ConcretePumpKeys.register();
         ClientTickEvents.END_CLIENT_TICK.register(ConcretePumpInputHandler::tick);
         ConcretePumpHud.register();
+        PumpRemoteKeys.register();
+        ClientTickEvents.END_CLIENT_TICK.register(PumpRemoteInputHandler::tick);
+        PumpRemoteHud.register();
     }
 }
