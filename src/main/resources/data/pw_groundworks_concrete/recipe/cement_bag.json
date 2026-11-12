@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:calcite",
+    "minecraft:calcite",
+    "minecraft:clay_ball",
+    "minecraft:coal"
+  ],
+  "result": {
+    "id": "pw_groundworks_concrete:cement_bag",
+    "count": 1
+  }
+}
