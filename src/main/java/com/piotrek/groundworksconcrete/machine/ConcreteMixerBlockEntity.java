@@ -8,6 +8,10 @@ import com.piotrek.groundworksconcrete.material.ConcreteBatch;
 import com.piotrek.groundworksconcrete.material.ConcreteGrade;
 import com.piotrek.groundworksconcrete.material.IngredientAmounts;
 import com.piotrek.groundworksconcrete.world.ConcreteFlowWorld;
+import com.piotrek.groundworksconcrete.vehicle.MixerTruckEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import java.util.Comparator;
 import com.piotrek.groundworksconcrete.world.ConcreteWorldApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -110,13 +114,32 @@ public final class ConcreteMixerBlockEntity extends BlockEntity {
             BlockState state = getBlockState();
             BlockPos outlet = worldPosition.relative(state.getValue(ConcreteMixerBlock.FACING));
             ConcreteBatch output = process.output();
-            ConcreteFlowWorld.PourResult result = ConcreteWorldApi.pour(server, outlet, output);
-            if (result.acceptedUnits() > 0) {
-                process.dischargeAccepted(result.acceptedUnits());
-                syncVisual(false);
-                server.playSound(null, worldPosition, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 0.9F, 0.75F);
+            // Stage 4: prioritize a compatible stationary truck hopper in front
+            // of the mixer; never deduct more than the vehicle actually accepted.
+            Vec3 release = Vec3.atCenterOf(outlet).add(0, 1.5, 0);
+            MixerTruckEntity receiver = server.getEntitiesOfClass(
+                    MixerTruckEntity.class, new AABB(outlet).inflate(4.5D),
+                    truck -> truck.canReceiveAt(release)
+                            && (truck.cargoSnapshot() == null
+                                || truck.cargoSnapshot().grade() == output.grade()))
+                    .stream()
+                    .min(Comparator.comparingDouble(t -> t.distanceToSqr(release)))
+                    .orElse(null);
+            int accepted;
+            if (receiver != null) {
+                accepted = receiver.receiveFresh(output);
             } else {
-                player.sendOverlayMessage(Component.literal("Mixer outlet obstructed. Clear space in front."));
+                ConcreteFlowWorld.PourResult result = ConcreteWorldApi.pour(server, outlet, output);
+                accepted = result.acceptedUnits();
+            }
+            if (accepted > 0) {
+                process.dischargeAccepted(accepted);
+                syncVisual(false);
+                server.playSound(null, worldPosition, SoundEvents.BUCKET_EMPTY,
+                        SoundSource.BLOCKS, 0.9F, 0.75F);
+            } else {
+                player.sendOverlayMessage(Component.literal(
+                        "Mixer outlet obstructed, incompatible batch or truck full."));
             }
             sendStatus(player);
             return;

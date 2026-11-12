@@ -3,6 +3,7 @@ package com.piotrek.groundworksconcrete.item;
 import com.piotrek.groundworksconcrete.GroundworksConcreteMod;
 import com.piotrek.groundworksconcrete.block.ConcreteBlocks;
 import com.piotrek.groundworksconcrete.material.ConcreteGrade;
+import com.piotrek.groundworksconcrete.vehicle.ConcreteTruckRegistry;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -44,6 +45,7 @@ public final class ConcreteItems {
                     output.accept(DRY_MIX_B30);
                     output.accept(ConcreteBlocks.FORMWORK_ITEM);
                     output.accept(ConcreteBlocks.MIXER_ITEM);
+                    output.accept(ConcreteTruckRegistry.MIXER_TRUCK_ITEM);
                     for (ConcreteGrade grade : ConcreteGrade.values()) {
                         output.accept(ConcreteBlocks.solidItem(grade));
                     }

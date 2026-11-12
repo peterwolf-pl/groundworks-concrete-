@@ -3,6 +3,7 @@ package com.piotrek.groundworksconcrete;
 import com.piotrek.groundworksconcrete.block.ConcreteBlocks;
 import com.piotrek.groundworksconcrete.block.ConcreteBlockEntities;
 import com.piotrek.groundworksconcrete.command.ConcreteCommands;
+import com.piotrek.groundworksconcrete.command.MixerTruckCommands;
 import com.piotrek.groundworksconcrete.item.ConcreteItems;
 import com.piotrek.groundworksconcrete.world.ConcreteFlowWorld;
 import net.fabricmc.api.ModInitializer;
@@ -22,6 +23,7 @@ public final class GroundworksConcreteMod implements ModInitializer {
         ConcreteBlockEntities.register();
         ConcreteItems.register();
         CommandRegistrationCallback.EVENT.register(ConcreteCommands::register);
+        CommandRegistrationCallback.EVENT.register(MixerTruckCommands::register);
         ServerTickEvents.END_SERVER_TICK.register(server ->
                 server.getAllLevels().forEach(level -> ConcreteFlowWorld.get(level).tick(level)));
         LOGGER.info("Groundworks Concrete Stage 3 ready: stationary mixer, concrete flow and curing");
